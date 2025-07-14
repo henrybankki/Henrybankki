@@ -24,10 +24,17 @@
     <input type="text" id="receiverId" placeholder="Vastaanottajan ID" />
     <input type="number" id="amount" placeholder="Summa €" />
     <button onclick="sendMoney()">Lähetä rahaa</button>
+<!-- Siirtohistoria -->
+<h2>Siirtohistoria</h2>
+<ul id="transferHistory"></ul>
+
+
 
     <h3>Lainat</h3>
     <button onclick="requestLoan()">Pyydä 100€ laina</button>
-    <button onclick="repayLoan()">Maksa laina takaisin</button>
+    <button onclick="repayLoan()">Maksa laina takaisin</button>>
+    
+
 
     <h3>Sijoitukset</h3>
     <input type="number" id="investAmount" placeholder="Sijoita €" />
@@ -36,6 +43,18 @@
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
+
+<!-- Kurssikäyrä -->
+<h2>Sijoituksen kurssikäyrä</h2>
+<canvas id="investmentChart" width="400" height="200"></canvas>
+    
+  
+
+
+    <h3>Lainat</h3>
+    <button onclick="requestLoan()">Pyydä 100€ laina</button>
+    <button onclick="repayLoan()">Maksa laina takaisin</button>>
+  
 
   <!-- Adminin näkymä -->
   <div id="admin-tools" style="display:none;">
