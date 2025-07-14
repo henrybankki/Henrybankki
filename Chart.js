@@ -37,3 +37,21 @@ setInterval(() => {
   if (kurssiHistoria.length > 10) kurssiHistoria.shift();
   piirräKurssikäyrä(kurssiHistoria);
 }, 5000);
+
+setInterval(() => {
+  const uusiKurssi = Math.round(50 + Math.random() * 50); // Esimerkkikurssi
+  const timestamp = firebase.firestore.Timestamp.now();
+
+  // Tallenna Firestoreen
+  firebase.firestore()
+    .collection("kurssit")
+    .add({
+      arvo: uusiKurssi,
+      timestamp: timestamp
+    });
+
+  // Päivitä visuaalinen käyrä
+  kurssiHistoria.push(uusiKurssi);
+  if (kurssiHistoria.length > 10) kurssiHistoria.shift();
+  piirräKurssikäyrä(kurssiHistoria);
+}, 5000);
