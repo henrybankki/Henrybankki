@@ -243,3 +243,29 @@ function näytäSiirtohistoria(käyttäjäId) {
       console.error("Siirtohistorian haku epäonnistui:", error);
     });
 }
+
+// Oletetaan että muuttujat fromUserId, toUserId, amount on määritelty
+
+const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+
+firebase.firestore()
+  .collection("users")
+  .doc(fromUserId)
+  .collection("transactions")
+  .add({
+    type: "Lähetys",
+    to: toUserId,
+    amount: amount,
+    timestamp: timestamp
+  });
+
+firebase.firestore()
+  .collection("users")
+  .doc(toUserId)
+  .collection("transactions")
+  .add({
+    type: "Vastaanotto",
+    from: fromUserId,
+    amount: amount,
+    timestamp: timestamp
+  });
