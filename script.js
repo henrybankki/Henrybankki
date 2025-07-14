@@ -222,3 +222,24 @@ function redeemInvestment() {
     }
   });
 }
+
+function näytäSiirtohistoria(käyttäjäId) {
+  const historyList = document.getElementById("transferHistory");
+  historyList.innerHTML = "";
+
+  firebase.firestore().collection("users").doc(käyttäjäId).collection("transactions")
+    .orderBy("timestamp", "desc")
+    .limit(10)
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement("li");
+        item.textContent = `${data.type} ${data.amount}€ käyttäjälle ${data.to || "-"} (${new Date(data.timestamp.toDate()).toLocaleString()})`;
+        historyList.appendChild(item);
+      });
+    })
+    .catch(error => {
+      console.error("Siirtohistorian haku epäonnistui:", error);
+    });
+}
