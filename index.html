@@ -3,22 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <title>Henrybankki</title>
-  <link rel="stylesheet" href="style.css" />
-  
-  <!-- Firebase SDK (V8) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Firebase asetukset ja skriptit -->
-  <script src="firebase-config.js"></script>
-  <script src="script.js" defer></script>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
   <h1>Henrybankki</h1>
 
@@ -39,40 +25,52 @@
     <input type="number" id="amount" placeholder="Summa €" />
     <button onclick="sendMoney()">Lähetä rahaa</button>
 
+    <!-- Siirtohistoria -->
     <h2>Siirtohistoria</h2>
     <ul id="transferHistory"></ul>
 
+    <!-- Lainat -->
     <h3>Lainat</h3>
     <button onclick="requestLoan()">Pyydä 100€ laina</button>
     <button onclick="repayLoan()">Maksa laina takaisin</button>
 
+    <!-- Sijoitukset -->
     <h3>Sijoitukset</h3>
     <input type="number" id="investAmount" placeholder="Sijoita €" />
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
 
+    <!-- Kurssikäyrä -->
     <h2>Sijoituksen kurssikäyrä</h2>
     <canvas id="investmentChart" width="400" height="200"></canvas>
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
 
+  <!-- Admin-työkalut -->
   <div id="admin-tools" style="display:none;">
     <h3>Admin: Lisää rahaa tileille</h3>
     <input type="text" id="targetId" placeholder="Käyttäjätunnus" />
     <input type="number" id="amountToAdd" placeholder="Summa €" />
     <button onclick="addMoney()">Lisää rahaa</button>
 
+    <h3>Lainapyyntöjen hyväksyntä</h3>
     <div id="loan-requests"></div>
   </div>
-  <!-- Firebase SDK:t -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
 
-<!-- Konfiguraatio ja oma sovellus -->
-<script src="firebase-config.js"></script>
-<script src="script.js"></script>
+  <!-- Scriptit loppuun oikeassa järjestyksessä -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase SDK:t -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+
+  <!-- Firebase-konfiguraatio -->
+  <script src="firebase-config.js"></script>
+
+  <!-- Oma logiikka -->
+  <script src="script.js"></script>
 </body>
 </html>
