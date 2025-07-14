@@ -7,7 +7,8 @@ window.onload = () => {
 };
 
 // KIRJAUTUMINEN
-function login() {
+function login(näytäSiirtohistoria(currentUserId);
+haeKurssiFirestoresta();) {
   const id = document.getElementById("userId").value;
   const pin = document.getElementById("pin").value;
   auth.signInWithEmailAndPassword(id + "@henrybankki.fi", pin)
