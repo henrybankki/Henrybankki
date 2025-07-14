@@ -1,4 +1,3 @@
-
 let db, auth;
 
 window.onload = () => {
@@ -14,9 +13,14 @@ function login() {
       document.getElementById("auth-section").style.display = "none";
       document.getElementById("main-section").style.display = "block";
       document.getElementById("welcome-user").innerText = id;
+
       db.collection("users").doc(id).get().then(doc => {
-        document.getElementById("balance").innerText = doc.data().balance || 100000000;
+        document.getElementById("balance").innerText = doc.data().balance || 0;
       });
+
+      if (id === "011100") {
+        document.getElementById("admin-tools").style.display = "block";
+      }
     })
     .catch(error => alert("Kirjautuminen epäonnistui: " + error.message));
 }
@@ -26,7 +30,7 @@ function signup() {
   const pin = document.getElementById("pin").value;
   auth.createUserWithEmailAndPassword(id + "@henrybankki.fi", pin)
     .then(() => {
-      db.collection("users").doc(id).set({ balance: 1000000000 });
+      db.collection("users").doc(id).set({ balance: 100 });
       alert("Tili luotu! Voit nyt kirjautua sisään.");
     })
     .catch(error => alert("Tiliä ei voitu luoda: " + error.message));
@@ -62,5 +66,18 @@ function logout() {
   auth.signOut().then(() => {
     document.getElementById("auth-section").style.display = "block";
     document.getElementById("main-section").style.display = "none";
+    document.getElementById("admin-tools").style.display = "none";
+  });
+}
+
+function addMoney() {
+  const targetId = document.getElementById("targetId").value;
+  const amount = parseFloat(document.getElementById("amountToAdd").value);
+  const userRef = db.collection("users").doc(targetId);
+
+  userRef.get().then(doc => {
+    const balance = doc.exists ? (doc.data().balance || 0) : 0;
+    userRef.set({ balance: balance + amount }, { merge: true });
+    alert("Lisättiin " + amount + " € käyttäjälle " + targetId);
   });
 }
