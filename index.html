@@ -9,7 +9,7 @@
   <h1>Henrybankki</h1>
 
   <div id="auth-section">
-    <input type="text" id="userId" placeholder="Käyttäjätunnus (numero)" />
+    <input type="number" id="userId" placeholder="Käyttäjätunnus (numero)" />
     <input type="password" id="pin" placeholder="PIN-koodi" />
     <button onclick="login()">Kirjaudu</button>
     <button onclick="signup()">Luo tili</button>
@@ -21,36 +21,31 @@
     <p>Laina: <span id="loan-info">-</span></p>
     <p>Sijoituksen arvo: <span id="investment-value">0</span> €</p>
 
-    <input type="text" id="receiverId" placeholder="Vastaanottajan ID" />
+    <input type="number" id="receiverId" placeholder="Vastaanottajan ID" />
     <input type="number" id="amount" placeholder="Summa €" />
     <button onclick="sendMoney()">Lähetä rahaa</button>
 
-    <!-- Siirtohistoria -->
     <h2>Siirtohistoria</h2>
     <ul id="transferHistory"></ul>
 
-    <!-- Lainat -->
     <h3>Lainat</h3>
-    <button onclick="requestLoan()">Pyydä 100€ laina</button>
+    <button onclick="requestLoan()">Pyydä 100 € laina</button>
     <button onclick="repayLoan()">Maksa laina takaisin</button>
 
-    <!-- Sijoitukset -->
     <h3>Sijoitukset</h3>
     <input type="number" id="investAmount" placeholder="Sijoita €" />
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
 
-    <!-- Kurssikäyrä -->
     <h2>Sijoituksen kurssikäyrä</h2>
     <canvas id="investmentChart" width="400" height="200"></canvas>
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
 
-  <!-- Admin-työkalut -->
   <div id="admin-tools" style="display:none;">
     <h3>Admin: Lisää rahaa tileille</h3>
-    <input type="text" id="targetId" placeholder="Käyttäjätunnus" />
+    <input type="number" id="targetId" placeholder="Käyttäjätunnus" />
     <input type="number" id="amountToAdd" placeholder="Summa €" />
     <button onclick="addMoney()">Lisää rahaa</button>
 
@@ -58,19 +53,12 @@
     <div id="loan-requests"></div>
   </div>
 
-  <!-- Scriptit loppuun oikeassa järjestyksessä -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <!-- Firebase SDK:t -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
-
-  <!-- Firebase-konfiguraatio -->
   <script src="firebase-config.js"></script>
-
-  <!-- Oma logiikka -->
-  <script src="script.js"></script>
+  <script src="script.js" defer></script>
 </body>
 </html>
