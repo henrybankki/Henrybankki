@@ -1,6 +1,11 @@
 let db, auth, currentUserId = "", chart;
 
 window.onload = () => {
+  // Jos firebase-config.js ei sisällä initApp, tee se täällä (poista jos on jo init)
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig); // oletetaan, että firebaseConfig on firebase-config.js:ssa
+  }
+
   db = firebase.firestore();
   auth = firebase.auth();
 
@@ -123,38 +128,27 @@ function addMoney() {
   });
 }
 
+// Lainapyyntöfunktiot eri summille
+function requestLoan1() {
+  requestLoanWithAmount(5);
+}
 function requestLoan() {
-  const ref = db.collection("users").doc(currentUserId);
-  ref.get().then(doc => {
-    const data = doc.data() || {};
-    if (data.loan > 0 || data.loanRequested) {
-      return alert("Sinulla on jo laina tai pyyntö.");
-    }
-    ref.update({ loanRequested: true, loanAmount: 100 });
-    alert("Lainapyyntö lähetetty!");
-  });
+  requestLoanWithAmount(100);
 }
-
 function requestLoan2() {
-  const ref = db.collection("users").doc(currentUserId);
-  ref.get().then(doc => {
-    const data = doc.data() || {};
-    if (data.loan > 0 || data.loanRequested) {
-      return alert("Sinulla on jo laina tai pyyntö.");
-    }
-    ref.update({ loanRequested: true, loanAmount: 20 });
-    alert("Lainapyyntö lähetetty!");
-  });
+  requestLoanWithAmount(20);
 }
-
 function requestLoan3() {
+  requestLoanWithAmount(50);
+}
+function requestLoanWithAmount(amount) {
   const ref = db.collection("users").doc(currentUserId);
   ref.get().then(doc => {
     const data = doc.data() || {};
     if (data.loan > 0 || data.loanRequested) {
       return alert("Sinulla on jo laina tai pyyntö.");
     }
-    ref.update({ loanRequested: true, loanAmount: 50 });
+    ref.update({ loanRequested: true, loanAmount: amount });
     alert("Lainapyyntö lähetetty!");
   });
 }
@@ -198,7 +192,7 @@ function repayLoan() {
     }
 
     let repay = d.loan;
-    if (new Date() > new Date(d.loanDueDate)) repay *= 1.15;
+    if (d.loanDueDate && new Date() > new Date(d.loanDueDate)) repay *= 1.15;
 
     if (d.balance >= repay) {
       ref.update({
@@ -261,7 +255,7 @@ function updateInvestmentValue() {
     const d = doc.data() || {};
     if (!d.investmentValue || d.investmentValue <= 0) return;
 
-    const change = 1 + (Math.random() * 0.2 - 0.1);
+    const change = 1 + (Math.random() * 0.2 - 0.1); // ±10%
     const newValue = Math.max(0, d.investmentValue * change);
 
     ref.update({ investmentValue: newValue });
@@ -324,4 +318,4 @@ function loadTransferHistory(id) {
         ul.appendChild(li);
       });
     });
-}
+      }
