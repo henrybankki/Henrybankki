@@ -55,3 +55,4 @@ setInterval(() => {
   if (kurssiHistoria.length > 10) kurssiHistoria.shift();
   piirräKurssikäyrä(kurssiHistoria);
 }, 5000);
+haeKurssiFirestoresta();
