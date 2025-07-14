@@ -26,7 +26,7 @@ function signup() {
   const pin = document.getElementById("pin").value;
   auth.createUserWithEmailAndPassword(id + "@henrybankki.fi", pin)
     .then(() => {
-      db.collection("users").doc(id).set({ balance: 100 });
+      db.collection("users").doc(id).set({ balance: 5 });
       alert("Tili luotu! Voit nyt kirjautua sisään.");
     })
     .catch(error => alert("Tiliä ei voitu luoda: " + error.message));
