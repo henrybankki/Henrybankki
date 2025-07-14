@@ -135,6 +135,30 @@ function requestLoan() {
   });
 }
 
+function requestLoan2() {
+  const ref = db.collection("users").doc(currentUserId);
+  ref.get().then(doc => {
+    const data = doc.data() || {};
+    if (data.loan > 0 || data.loanRequested) {
+      return alert("Sinulla on jo laina tai pyyntö.");
+    }
+    ref.update({ loanRequested: true, loanAmount: 20 });
+    alert("Lainapyyntö lähetetty!");
+  });
+}
+
+function requestLoan3() {
+  const ref = db.collection("users").doc(currentUserId);
+  ref.get().then(doc => {
+    const data = doc.data() || {};
+    if (data.loan > 0 || data.loanRequested) {
+      return alert("Sinulla on jo laina tai pyyntö.");
+    }
+    ref.update({ loanRequested: true, loanAmount: 50 });
+    alert("Lainapyyntö lähetetty!");
+  });
+}
+
 function loadLoanRequests() {
   db.collection("users").where("loanRequested", "==", true)
     .onSnapshot(snapshot => {
