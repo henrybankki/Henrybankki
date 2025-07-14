@@ -2,16 +2,44 @@
 <html lang="fi">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Henrybankki</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Perustyylit koko leveydelle ja sisennyksille */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+    }
+    button, input {
+      font-size: 1rem;
+      margin: 5px 0;
+    }
+    button {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px;
+      cursor: pointer;
+    }
+    #investmentChart {
+      width: 100% !important;
+      max-width: 600px;
+      height: 200px !important;
+      display: block;
+      margin: 15px 0;
+    }
+  </style>
 </head>
 <body>
   <h1>Henrybankki</h1>
 
   <div id="auth-section">
-    <input type="number" id="userId" placeholder="Käyttäjätunnus (numero)" /> <br>
-    <input type="password" id="pin" placeholder="PIN-koodi" /> <br>
-    <button onclick="login()">Kirjaudu</button> <br>
+    <input type="number" id="userId" placeholder="Käyttäjätunnus (numero)" /> <br />
+    <input type="password" id="pin" placeholder="PIN-koodi" /> <br />
+    <button onclick="login()">Kirjaudu</button> <br />
     <button onclick="signup()">Luo tili</button>
   </div>
 
@@ -29,20 +57,19 @@
     <ul id="transferHistory"></ul>
 
     <h3>Lainat</h3>
-    <button onclick="requestLoan()">Pyydä 100 € laina</button>
-    <button onclick="requestLoan1()">Pyydä 10 € laina</button>
+    <button onclick="requestLoan1()">Pyydä 5 € laina</button>
     <button onclick="requestLoan2()">Pyydä 20 € laina</button>
     <button onclick="requestLoan3()">Pyydä 50 € laina</button>
-    
+    <button onclick="requestLoan()">Pyydä 100 € laina</button>
     <button onclick="repayLoan()">Maksa laina takaisin</button>
-    <button onclick="requestLoan()">Pyydä 5 € laina</button>
+
     <h3>Sijoitukset</h3>
     <input type="number" id="investAmount" placeholder="Sijoita €" />
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
 
     <h2>Sijoituksen kurssikäyrä</h2>
-    <canvas id="investmentChart" width="85vw" height="200"></canvas>
+    <canvas id="investmentChart"></canvas>
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
@@ -65,4 +92,4 @@
   <script src="firebase-config.js"></script>
   <script src="script.js" defer></script>
 </body>
-</html>
+</html> 
