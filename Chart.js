@@ -55,4 +55,21 @@ setInterval(() => {
   if (kurssiHistoria.length > 10) kurssiHistoria.shift();
   piirräKurssikäyrä(kurssiHistoria);
 }, 5000);
+
+function haeKurssiFirestoresta() {
+  firebase.firestore()
+    .collection("kurssit")
+    .orderBy("timestamp", "desc")
+    .limit(10)
+    .get()
+    .then(snapshot => {
+      const data = [];
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        data.unshift(d.arvo); // vanhin ensin
+      });
+      piirräKurssikäyrä(data);
+    })
+    .catch(e => console.error("Kurssien hakuvirhe:", e));
+}
 haeKurssiFirestoresta();
