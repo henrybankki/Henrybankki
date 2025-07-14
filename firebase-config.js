@@ -1,11 +1,18 @@
+// Lataa Firebase v9+ modulikompatibiliteetilla
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
+
+// Firebase-konfiguraatio
 const firebaseConfig = {
-  apiKey: "AIzaSyC_67n4Sf1wqjdc2tSZzzhYK3ZbrizF8nQ",
-  authDomain: "henrybankki.firebaseapp.com",
-  projectId: "henrybankki",
-  storageBucket: "henrybankki.appspot.com",  // ← tämä on nyt oikein
-  messagingSenderId: "597512229806",
-  appId: "1:597512229806:web:6a4f5c304ff355f11eee3f",
-  measurementId: "G-4PV8ES2R3X"
+  apiKey: "AIzaSyB3eAdsCYIFWI06DS6lj5GUMYBwooRNd_8",
+  authDomain: "henrybank-12a99.firebaseapp.com",
+  projectId: "henrybank-12a99",
+  storageBucket: "henrybank-12a99.appspot.com", // korjattu .app → .com
+  messagingSenderId: "404077920890",
+  appId: "1:404077920890:web:9eee6fa70b11272bb671c3",
+  measurementId: "G-NC2R6N5K7M"
 };
 
-firebase.initializeApp(firebaseConfig);
+// Alusta Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
