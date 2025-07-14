@@ -15,7 +15,7 @@ function login() {
       document.getElementById("main-section").style.display = "block";
       document.getElementById("welcome-user").innerText = id;
       db.collection("users").doc(id).get().then(doc => {
-        document.getElementById("balance").innerText = doc.data().balance || 0;
+        document.getElementById("balance").innerText = doc.data().balance || 100000000;
       });
     })
     .catch(error => alert("Kirjautuminen epäonnistui: " + error.message));
@@ -26,7 +26,7 @@ function signup() {
   const pin = document.getElementById("pin").value;
   auth.createUserWithEmailAndPassword(id + "@henrybankki.fi", pin)
     .then(() => {
-      db.collection("users").doc(id).set({ balance: 5 });
+      db.collection("users").doc(id).set({ balance: 1000000000 });
       alert("Tili luotu! Voit nyt kirjautua sisään.");
     })
     .catch(error => alert("Tiliä ei voitu luoda: " + error.message));
