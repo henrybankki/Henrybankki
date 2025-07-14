@@ -35,7 +35,6 @@ function signup() {
     })
     .catch(error => alert("Tiliä ei voitu luoda: " + error.message));
 }
-}
 
 function sendMoney() {
   const senderId = document.getElementById("userId").value;
