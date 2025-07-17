@@ -1,10 +1,28 @@
-
-// Firebase init on tehty erillisessä tiedostossa
+// Firebase Firestore
 const db = firebase.firestore();
 
-// Lisää JavaScript-toiminnot tänne (esim. login, signup jne.)
+const cryptoMap = {
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  BNB: "binancecoin",
+  SOL: "solana",
+  XRP: "ripple"
+};
+
+const stockMap = {
+  NOKIA: "NOKIA.HE",
+  KONE: "KNEBV.HE",
+  FORTUM: "FORTUM.HE",
+  SAMPO: "SAMPO.HE",
+  NESTE: "NESTE.HE"
+};
+
+let investmentChart = null;
+let currentSymbol = null;
+let autoUpdateInterval = null;
+
+// ---------- LOGIN JA KÄYTTÄJÄ ----------
 function login() {
-  loadInvestmentTargets();
   const userId = document.getElementById("userId").value;
   const pin = document.getElementById("pin").value;
 
@@ -15,18 +33,18 @@ function login() {
       document.getElementById("main-section").style.display = "block";
       document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
       loadBalance();
-      loadInvestmentGraph(); // <-- LISÄTTY
+      loadInvestmentTargets(); // <-- Käynnistä sijoitukset
     } else {
       alert("Virheellinen käyttäjätunnus tai PIN");
     }
   });
 }
 
-
 function signup() {
   const userId = document.getElementById("userId").value;
   const pin = document.getElementById("pin").value;
   const accountNumber = "FIH1435" + Math.floor(100000 + Math.random() * 900000);
+
   db.collection("users").doc(userId).set({
     pin,
     balance: 100,
@@ -51,8 +69,7 @@ function loadBalance() {
   });
 }
 
-// Poistetaan vanha loadInvestmentGraph ja käytetään vain tätä API-versiota
-
+// ---------- SIJOITUS ----------
 async function loadInvestmentGraph(symbol) {
   currentSymbol = symbol;
   const ctx = document.getElementById("investmentChart").getContext("2d");
@@ -128,7 +145,15 @@ function loadInvestmentTargets() {
   startAutoUpdate(targets[0].id);
 }
 
-// 🔹 Uudet funktiot
+function startAutoUpdate(symbol) {
+  if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+  loadInvestmentGraph(symbol);
+  autoUpdateInterval = setInterval(() => {
+    loadInvestmentGraph(symbol);
+  }, 10000); // päivitys 10 sek välein
+}
+
+// ---------- SIJOITA JA LUNASTA ----------
 async function invest() {
   const userId = localStorage.getItem("currentUserId");
   const amount = parseFloat(document.getElementById("investment-amount").value);
@@ -140,7 +165,6 @@ async function invest() {
 
   if (data.balance < amount) return alert("Ei tarpeeksi saldoa");
 
-  // Vähennä saldo
   await docRef.update({
     balance: data.balance - amount,
     investment: {
