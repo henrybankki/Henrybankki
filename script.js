@@ -227,27 +227,28 @@ function repayLoan() {
   });
 }
 
-function invest() {
-  const amount = parseFloat(document.getElementById("investAmount").value);
-  if (isNaN(amount) || amount <= 0) {
-    return alert("Anna sijoitussumma.");
-  }
+function investInTarget() {
+  const amount = parseFloat(document.getElementById("customInvestAmount").value);
+  const target = document.getElementById("investmentTarget").value;
+
+  if (isNaN(amount) || amount <= 0) return alert("Virheellinen summa.");
 
   const ref = db.collection("users").doc(currentUserId);
   ref.get().then(doc => {
     const d = doc.data() || {};
-    if (d.balance >= amount) {
-      ref.update({
-        balance: d.balance - amount,
-        investment: (d.investment || 0) + amount,
-        investmentValue: (d.investmentValue || 0) + amount
-      });
-      alert("Sijoitus tehty!");
-    } else {
-      alert("Ei tarpeeksi saldoa.");
-    }
+    if (d.balance < amount) return alert("Ei tarpeeksi saldoa.");
+
+    const key = `invest_${target}`;
+
+    ref.update({
+      balance: d.balance - amount,
+      [key]: (d[key] || 0) + amount
+    });
+
+    alert(`Sijoitettu ${amount} € kohteeseen ${target}`);
   });
 }
+
 
 function redeemInvestment() {
   const ref = db.collection("users").doc(currentUserId);
