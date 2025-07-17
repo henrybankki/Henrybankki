@@ -1,118 +1,40 @@
 <!DOCTYPE html>
 <html lang="fi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
   <title>Henrybankki</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    /* Perustyylit koko leveydelle ja sisennyksille */
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-    body {
-      font-family: Arial, sans-serif;
-      padding: 10px;
-    }
-    button, input {
-      font-size: 1rem;
-      margin: 5px 0;
-    }
-    button {
-      width: 100%;
-      max-width: 400px;
-      padding: 10px;
-      cursor: pointer;
-    }
-    #investmentChart {
-      width: 100% !important;
-      max-width: 600px;
-      height: 200px !important;
-      display: block;
-      margin: 15px 0;
-    }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="script.js" defer></script>
 </head>
 <body>
-  <h1>Henrybankki</h1>
+  <h1>Tervetuloa Henrybankkiin</h1>
 
   <div id="auth-section">
-    <input type="number" id="userId" placeholder="Käyttäjätunnus (numero)" /> <br />
-    <input type="password" id="pin" placeholder="PIN-koodi" /> <br />
-    <button onclick="login()">Kirjaudu</button> <br />
+    <input type="text" id="userId" placeholder="Käyttäjätunnus">
+    <input type="password" id="pin" placeholder="PIN">
+    <button onclick="login()">Kirjaudu</button>
     <button onclick="signup()">Luo tili</button>
   </div>
 
   <div id="main-section" style="display:none;">
-    <h2>Tervetuloa, <span id="welcome-user"></span>!</h2>
-    <p>Saldo: <span id="balance">0</span> €</p>
-    <p>Laina: <span id="loan-info">-</span></p>
-    <p>Sijoituksen arvo: <span id="investment-value">0</span> €</p>
+    <p id="welcome-text"></p>
+    <p id="balance-display"></p>
+    <p id="account-number-display"></p>
 
-    <input type="number" id="receiverId" placeholder="Vastaanottajan ID" />
-    <input type="number" id="amount" placeholder="Summa €" />
-    <button onclick="sendMoney()">Lähetä rahaa</button>
+    <h3>Laskut</h3>
+    <ul id="invoice-list"></ul>
 
-    <h2>Siirtohistoria</h2>
-    <ul id="transferHistory"></ul>
-
-    <h3>Lainat</h3>
-    <button onclick="requestLoan1()">Pyydä 5 € laina</button>
-    <button onclick="requestLoan2()">Pyydä 20 € laina</button>
-    <button onclick="requestLoan3()">Pyydä 50 € laina</button>
-    <button onclick="requestLoan()">Pyydä 100 € laina</button>
-    <button onclick="repayLoan()">Maksa laina takaisin</button>
-
-    <h3>Sijoitukset</h3>
-    <input type="number" id="investAmount" placeholder="Sijoita €" />
-    <button onclick="invest()">Sijoita</button>
-    <button onclick="redeemInvestment()">Lunasta sijoitus</button>
-<h4>Muut sijoituskohteet</h4>
-<select id="investmentTarget">
-  <option value="bitcoin">Bitcoin</option>
-  <option value="ethereum">Ethereum</option>
-  <option value="dogecoin">Dogecoin</option>
-  <option value="nokia">Nokia</option>
-  <option value="tesla">Tesla</option>
-  <option value="metsä">Metsärahasto</option>
-  <option value="aurinko">Aurinkosähkö</option>
-</select>
-<input type="number" id="customInvestAmount" placeholder="Summa €" />
-<button onclick="investInTarget()">Sijoita</button>
-
-    <h2>Sijoituksen kurssikäyrä</h2>
-    <canvas id="investmentChart"></canvas>
-
-    <h3>Maksamattomat laskut</h3>
-<ul id="invoiceList"></ul>
-<button onclick="payInvoice()">Maksa valittu lasku</button>
-
+    <div id="admin-tools" style="display:none;">
+      <h3>Luo uusi lasku</h3>
+      <input type="text" id="invoice-user-id" placeholder="Käyttäjätunnus">
+      <input type="number" id="invoice-amount" placeholder="Summa">
+      <button onclick="createInvoice()">Luo lasku</button>
+    </div>
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
-
-  <div id="admin-tools" style="display:none;">
-    <h3>Admin: Lisää rahaa tileille</h3>
-    <input type="number" id="targetId" placeholder="Käyttäjätunnus" />
-    <input type="number" id="amountToAdd" placeholder="Summa €" />
-    <button onclick="addMoney()">Lisää rahaa</button>
-
-    <h3>Lainapyyntöjen hyväksyntä</h3>
-    <div id="loan-requests"></div>
-
-
-  <div></divZ>  <h3>Laskujen hallinta</h3>
-<input type="number" id="invoice-target-id" placeholder="Käyttäjä-ID" />
-<input type="number" id="invoice-amount" placeholder="Summa €" />
-<button onclick="createInvoice()">Luo lasku</button>
- </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="script.js" defer></script>
 </body>
-</html> 
+</html>
