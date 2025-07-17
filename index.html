@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Henrybankki</title>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-  <body onload="loadInvestmentTargets()">
   <script src="firebase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js" defer></script>
@@ -16,6 +14,7 @@
 <body>
   <h1>Tervetuloa Henrybankkiin</h1>
 
+  <!-- Kirjautuminen -->
   <div id="auth-section">
     <input type="text" id="userId" placeholder="Käyttäjätunnus">
     <input type="password" id="pin" placeholder="PIN">
@@ -23,6 +22,7 @@
     <button onclick="signup()">Luo tili</button>
   </div>
 
+  <!-- Pääsisältö -->
   <div id="main-section" style="display:none;">
     <p id="welcome-text"></p>
     <p id="balance-display"></p>
@@ -31,6 +31,7 @@
     <h3>Laskut</h3>
     <ul id="invoice-list"></ul>
 
+    <!-- Admin työkalut -->
     <div id="admin-tools" style="display:none;">
       <h3>Luo uusi lasku</h3>
       <input type="text" id="invoice-user-id" placeholder="Käyttäjätunnus">
@@ -46,18 +47,21 @@
       <ul id="loan-requests"></ul>
     </div>
 
+    <!-- Sijoitukset -->
     <h3>Sijoitukset</h3>
     <select id="investment-target" onchange="onInvestmentTargetChange()"></select>
     <div id="investment-graph">
-  <canvas id="investmentChart" width="200" height="200"></canvas>
-</div>
-<input type="number" id="investment-amount" placeholder="Summa">
+      <canvas id="investmentChart" width="400" height="200"></canvas>
+    </div>
+    <input type="number" id="investment-amount" placeholder="Summa">
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
+
     <h3>Lainan pyyntö</h3>
     <input type="number" id="loan-amount" placeholder="Summa">
     <button onclick="requestLoan()">Pyydä laina</button>
 
+    <br><br>
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
 </body>
