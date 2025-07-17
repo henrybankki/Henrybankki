@@ -1,16 +1,55 @@
-function startAutoUpdate(symbol) {
-  if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-  loadInvestmentGraph(symbol);
-  autoUpdateInterval = setInterval(() => {
-    loadInvestmentGraph(symbol);
-  }, 10000); // päivitys 10 s välein
-}
-
-
-
-// Firebase Firestore
+// Firebase init (firebase-config.js sisältää asetukset)
 const db = firebase.firestore();
 
+// ==== Kirjautuminen ====
+function login() {
+  const userId = document.getElementById("userId").value;
+  const pin = document.getElementById("pin").value;
+
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().pin === pin) {
+      localStorage.setItem("currentUserId", userId);
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("main-section").style.display = "block";
+      document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
+      loadBalance();
+      loadInvestmentTargets(); // ✅ Käynnistää sijoituskohteiden latauksen
+    } else {
+      alert("Virheellinen käyttäjätunnus tai PIN");
+    }
+  });
+}
+
+function signup() {
+  const userId = document.getElementById("userId").value;
+  const pin = document.getElementById("pin").value;
+  const accountNumber = "FI" + Math.floor(1000000000 + Math.random() * 9000000000);
+  db.collection("users").doc(userId).set({
+    pin,
+    balance: 100,
+    accountNumber
+  }).then(() => {
+    alert("Tili luotu!");
+  });
+}
+
+function logout() {
+  localStorage.removeItem("currentUserId");
+  document.getElementById("auth-section").style.display = "block";
+  document.getElementById("main-section").style.display = "none";
+}
+
+// ==== Saldo ====
+function loadBalance() {
+  const userId = localStorage.getItem("currentUserId");
+  db.collection("users").doc(userId).get().then(doc => {
+    const data = doc.data();
+    document.getElementById("balance-display").innerText = `Saldo: ${data.balance} €`;
+    document.getElementById("account-number-display").innerText = `Tilinumero: ${data.accountNumber}`;
+  });
+}
+
+// ==== Sijoitukset ====
 const cryptoMap = {
   BTC: "bitcoin",
   ETH: "ethereum",
@@ -28,63 +67,12 @@ const stockMap = {
 };
 
 let investmentChart = null;
-let currentSymbol = null;
 let autoUpdateInterval = null;
 
-// ---------- LOGIN JA KÄYTTÄJÄ ----------
-function login() {
-  const userId = document.getElementById("userId").value;
-  const pin = document.getElementById("pin").value;
-
-  db.collection("users").doc(userId).get().then(doc => {
-    if (doc.exists && doc.data().pin === pin) {
-      localStorage.setItem("currentUserId", userId);
-      document.getElementById("auth-section").style.display = "none";
-      document.getElementById("main-section").style.display = "block";
-      document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
-      loadBalance();
-      loadInvestmentTargets(); // <-- Käynnistä sijoitukset
-    } else {
-      alert("Virheellinen käyttäjätunnus tai PIN");
-    }
-  });
-}
-
-function signup() {
-  const userId = document.getElementById("userId").value;
-  const pin = document.getElementById("pin").value;
-  const accountNumber = "FIH1435" + Math.floor(100000 + Math.random() * 900000);
-
-  db.collection("users").doc(userId).set({
-    pin,
-    balance: 100,
-    accountNumber
-  }).then(() => {
-    alert("Tili luotu!");
-  });
-}
-
-function logout() {
-  localStorage.removeItem("currentUserId");
-  document.getElementById("auth-section").style.display = "block";
-  document.getElementById("main-section").style.display = "none";
-}
-
-function loadBalance() {
-  const userId = localStorage.getItem("currentUserId");
-  db.collection("users").doc(userId).get().then(doc => {
-    const data = doc.data();
-    document.getElementById("balance-display").innerText = `Saldo: ${data.balance} €`;
-    document.getElementById("account-number-display").innerText = `Tilinumero: ${data.accountNumber}`;
-  });
-}
-
-// ---------- SIJOITUS ----------
 async function loadInvestmentGraph(symbol) {
-  currentSymbol = symbol;
   const ctx = document.getElementById("investmentChart").getContext("2d");
-
-  let labels = [], prices = [];
+  let labels = [];
+  let prices = [];
 
   try {
     if (cryptoMap[symbol]) {
@@ -100,15 +88,17 @@ async function loadInvestmentGraph(symbol) {
       const res = await fetch(url);
       const json = await res.json();
       const result = json.chart.result[0];
-      labels = result.timestamp.map(ts => new Date(ts * 1000).toLocaleDateString("fi-FI", { day: "2-digit", month: "short" }));
-      prices = result.indicators.quote[0].close;
+      const timestamps = result.timestamp;
+      const closePrices = result.indicators.quote[0].close;
+      labels = timestamps.map(ts => new Date(ts * 1000).toLocaleDateString("fi-FI", { day: "2-digit", month: "short" }));
+      prices = closePrices;
     }
 
     if (investmentChart) investmentChart.destroy();
     investmentChart = new Chart(ctx, {
       type: "line",
       data: {
-        labels,
+        labels: labels,
         datasets: [{
           label: symbol,
           data: prices,
@@ -119,7 +109,6 @@ async function loadInvestmentGraph(symbol) {
       },
       options: { responsive: true }
     });
-
   } catch (err) {
     console.error("Virhe ladattaessa dataa:", err);
   }
@@ -151,119 +140,11 @@ function loadInvestmentTargets() {
     opt.textContent = t.name;
     sel.appendChild(opt);
   });
-
   startAutoUpdate(targets[0].id);
 }
 
 function startAutoUpdate(symbol) {
   if (autoUpdateInterval) clearInterval(autoUpdateInterval);
   loadInvestmentGraph(symbol);
-  autoUpdateInterval = setInterval(() => {
-    loadInvestmentGraph(symbol);
-  }, 10000); // päivitys 10 sek välein
-}
-
-// ---------- SIJOITA JA LUNASTA ----------
-async function invest() {
-  const userId = localStorage.getItem("currentUserId");
-  const amount = parseFloat(document.getElementById("investment-amount").value);
-  if (!amount || amount <= 0) return alert("Anna oikea summa");
-
-  const docRef = db.collection("users").doc(userId);
-  const docSnap = await docRef.get();
-  const data = docSnap.data();
-
-  if (data.balance < amount) return alert("Ei tarpeeksi saldoa");
-
-  await docRef.update({
-    balance: data.balance - amount,
-    investment: {
-      symbol: currentSymbol,
-      amount: (data.investment?.amount || 0) + amount
-    }
-  });
-
-  alert(`Sijoitettu ${amount} € kohteeseen ${currentSymbol}`);
-  loadBalance();
-}
-
-async function redeemInvestment() {
-  const userId = localStorage.getItem("currentUserId");
-  const docRef = db.collection("users").doc(userId);
-  const docSnap = await docRef.get();
-  const data = docSnap.data();
-
-  if (!data.investment || data.investment.amount <= 0) return alert("Ei sijoituksia lunastettavaksi");
-
-  const redeemed = data.investment.amount;
-  await docRef.update({
-    balance: data.balance + redeemed,
-    investment: firebase.firestore.FieldValue.delete()
-  });
-
-  alert(`Lunastettu ${redeemed} €`);
-  loadBalance();
-}
-
-vasync function sendMoney() {
-  const senderId = localStorage.getItem("currentUserId");
-  const iban = document.getElementById("transfer-iban").value.trim().toUpperCase();
-  const amount = parseFloat(document.getElementById("transfer-amount").value);
-
-  // IBAN-validointi
-  if (!/^FIH[A-Z0-9]{6,}$/i.test(iban)) {
-    alert("Virheellinen IBAN-muoto (esim. FI1435123456)");
-    return;
-  }
-
-  if (!iban || isNaN(amount) || amount <= 0) {
-    alert("Anna oikeat tiedot");
-    return;
-  }
-
-  const senderRef = db.collection("users").doc(senderId);
-
-  try {
-    // Hae vastaanottajan käyttäjä IBANin perusteella
-    const querySnapshot = await db.collection("users").where("accountNumber", "==", iban).get();
-
-    if (querySnapshot.empty) {
-      alert("Tilinumeroa ei löytynyt");
-      return;
-    }
-
-    const receiverDoc = querySnapshot.docs[0];
-    const receiverId = receiverDoc.id;
-
-    if (receiverId === senderId) {
-      alert("Et voi lähettää rahaa omalle tilillesi");
-      return;
-    }
-
-    const receiverRef = db.collection("users").doc(receiverId);
-
-    await db.runTransaction(async (transaction) => {
-      const senderSnap = await transaction.get(senderRef);
-      const receiverSnap = await transaction.get(receiverRef);
-
-      if (!senderSnap.exists) throw "Lähettäjän tiliä ei löytynyt";
-      if (!receiverSnap.exists) throw "Vastaanottajan tiliä ei löytynyt";
-
-      const senderData = senderSnap.data();
-      const receiverData = receiverSnap.data();
-
-      if (senderData.balance < amount) throw "Ei tarpeeksi saldoa";
-
-      transaction.update(senderRef, { balance: senderData.balance - amount });
-      transaction.update(receiverRef, { balance: (receiverData.balance || 0) + amount });
-    });
-
-    alert(`Lähetetty ${amount} € tilille ${iban}`);
-    loadBalance();
-    document.getElementById("transfer-iban").value = "";
-    document.getElementById("transfer-amount").value = "";
-  } catch (error) {
-    alert("Virhe: " + error);
-    console.error(error);
-  }
+  autoUpdateInterval = setInterval(() => loadInvestmentGraph(symbol), 10000);
 }
