@@ -48,6 +48,13 @@
 </select>
 <input type="number" id="investmentAmount" placeholder="Sijoitettava summa €" step="0.01" min="0.01" />
 <button onclick="invest()">Sijoita</button>
+<!-- Lisää pääosioon, vaikka sijoitusten alle -->
+
+<h3>Lainat</h3>
+<p>Lainan määrä:</p>
+<input type="number" id="loanAmount" placeholder="Lainan summa €" min="1" step="1" />
+<button onclick="requestLoan()">Pyydä lainaa</button>
+
 
 
     <h3>Laskut</h3>
@@ -64,7 +71,11 @@
       <input type="number" id="add-money-amount" placeholder="Summa €" step="0.01" min="0.01">
       <button onclick="addMoney()">Lisää rahaa</button>
     </div>
-
+<!-- Admin-työkalut osioon -->
+<div id="loan-requests" style="display:none;">
+  <h3>Lainapyyntöjen hyväksyntä (Admin)</h3>
+  <div id="loan-requests-list"></div>
+</div>
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
 </body>
