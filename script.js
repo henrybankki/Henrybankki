@@ -591,4 +591,15 @@ window.onload = () => {
   fetchInvestmentChart();
   onInvestmentTargetChange();
 };
+// Tee funktioista globaaleja, jotta onclick toimii
+window.login = login;
+window.signup = signup;
+window.logout = logout;
+window.createInvoice = createInvoice;
+window.payInvoice = payInvoice;
+window.invest = invest;
+window.redeemInvestment = redeemInvestment;
+window.requestLoan = requestLoan;
+window.approveLoan = approveLoan;
+window.onInvestmentTargetChange = onInvestmentTargetChange;
 
