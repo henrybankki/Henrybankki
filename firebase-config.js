@@ -1,14 +1,13 @@
-// Firebase-konfiguraatio (V8)
-var firebaseConfig = {
-  apiKey: "AIzaSyB3eAdsCYIFWI06DS6lj5GUMYBwooRNd_8",
-  authDomain: "henrybank-12a99.firebaseapp.com",
-  projectId: "henrybank-12a99",
-  storageBucket: "henrybank-12a99.appspot.com",
-  messagingSenderId: "404077920890",
-  appId: "1:404077920890:web:9eee6fa70b11272bb671c3",
-  measurementId: "G-NC2R6N5K7M"
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyC_67n4Sf1wqjdc2tSZzzhYK3ZbrizF8nQ",
+  authDomain: "henrybankki.firebaseapp.com",
+  projectId: "henrybankki",
+  storageBucket: "henrybankki.firebasestorage.app",
+  messagingSenderId: "597512229806",
+  appId: "1:597512229806:web:6a4f5c304ff355f11eee3f",
+  measurementId: "G-4PV8ES2R3X"
 };
-
 // Alusta Firebase
 firebase.initializeApp(firebaseConfig);
 firebase.analytics();
