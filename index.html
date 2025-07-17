@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Henrybankki</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -10,6 +11,83 @@
   <script src="firebase-config.js"></script>
   <script src="script.js" defer></script>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Perustyylit (mobile-first) */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    h1, h3, h4 {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    #auth-section, #main-section {
+      max-width: 400px;
+      margin: 20px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    /* Admin-osio */
+    #admin-tools {
+      background: #f4f4f4;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 20px;
+    }
+
+    /* Siirtohistoria */
+    #transfer-history ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    #transfer-history li {
+      background: #f4f4f4;
+      padding: 8px;
+      margin-bottom: 5px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    /* Responsiivisuus */
+    @media (min-width: 600px) {
+      #auth-section, #main-section {
+        max-width: 600px;
+      }
+    }
+  </style>
 </head>
 <body>
   <h1>Tervetuloa Henrybankkiin</h1>
@@ -31,7 +109,7 @@
     <!-- ✅ Rahansiirrot -->
     <h3>Lähetä rahaa (IBAN)</h3>
     <input type="text" id="send-iban" placeholder="Vastaanottajan IBAN">
-    <input type="number" id="send-amount" placeholder="Summa">
+    <input type="number" id="send-amount" placeholder="Summa (€)">
     <button onclick="sendMoney()">Lähetä</button>
 
     <!-- ✅ Siirtohistoria -->
@@ -45,17 +123,17 @@
     <ul id="invoice-list"></ul>
 
     <!-- ✅ Admin työkalut -->
-    <div id="admin-tools" style="display:none; border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+    <div id="admin-tools" style="display:none;">
       <h3>Admin työkalut</h3>
 
       <h4>Luo lasku</h4>
       <input type="text" id="invoice-user-id" placeholder="Käyttäjätunnus">
-      <input type="number" id="invoice-amount" placeholder="Summa">
+      <input type="number" id="invoice-amount" placeholder="Summa (€)">
       <button onclick="createInvoice()">Luo lasku</button>
 
-      <h4>Lisää rahaa</h4>
+      <h4>Lisää rahaa käyttäjälle</h4>
       <input type="text" id="target-user-id" placeholder="Käyttäjätunnus">
-      <input type="number" id="add-money-amount" placeholder="Summa">
+      <input type="number" id="add-money-amount" placeholder="Summa (€)">
       <button onclick="addMoney()">Lisää rahaa</button>
 
       <h4>Hyväksy lainat</h4>
@@ -65,16 +143,16 @@
     <!-- ✅ Sijoitukset -->
     <h3>Sijoitukset</h3>
     <select id="investment-target" onchange="onInvestmentTargetChange()"></select>
-    <div id="investment-graph">
+    <div id="investment-graph" style="margin-top:10px;">
       <canvas id="investmentChart" width="200" height="200"></canvas>
     </div>
-    <input type="number" id="investment-amount" placeholder="Summa">
+    <input type="number" id="investment-amount" placeholder="Summa (€)">
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
 
     <!-- ✅ Lainat -->
     <h3>Lainan pyyntö</h3>
-    <input type="number" id="loan-amount" placeholder="Summa">
+    <input type="number" id="loan-amount" placeholder="Summa (€)">
     <button onclick="requestLoan()">Pyydä laina</button>
 
     <br><br>
