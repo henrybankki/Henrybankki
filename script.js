@@ -335,6 +335,52 @@ function rejectLoan(userId) {
   });
 }
 
+function invest() {
+  const userId = localStorage.getItem("currentUserId");
+  if (!userId) {
+    alert("Kirjaudu ensin sisään.");
+    return;
+  }
+  const target = document.getElementById("investmentTarget").value;
+  const amount = parseFloat(document.getElementById("investmentAmount").value);
+
+  if (isNaN(amount) || amount <= 0) {
+    alert("Anna kelvollinen sijoitussumma.");
+    return;
+  }
+
+  const userRef = db.collection("users").doc(userId);
+
+  userRef.get().then(doc => {
+    if (!doc.exists) {
+      alert("Käyttäjää ei löytynyt.");
+      return;
+    }
+
+    const data = doc.data();
+    const balance = data.balance || 0;
+
+    if (balance < amount) {
+      alert("Ei tarpeeksi saldoa sijoitukseen.");
+      return;
+    }
+
+    // Päivitetään saldo ja kohdekohtainen sijoitus, esim. invest_bitcoin, invest_ethereum jne.
+    const investmentKey = `invest_${target}`;
+    const currentInvestment = data[investmentKey] || 0;
+
+    userRef.update({
+      balance: balance - amount,
+      [investmentKey]: currentInvestment + amount
+    }).then(() => {
+      alert(`Sijoitit ${amount.toFixed(2)} € kohteeseen ${target}.`);
+      loadBalance();
+      document.getElementById("investmentAmount").value = "";
+    });
+  });
+}
+
+
 // Kutsu adminin latausfunktio kirjautumisen yhteydessä
 function login() {
   const userId = document.getElementById("userId").value;
