@@ -14,11 +14,13 @@ function login() {
       document.getElementById("main-section").style.display = "block";
       document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
       loadBalance();
+      loadInvestmentGraph(); // <-- LISÄTTY
     } else {
       alert("Virheellinen käyttäjätunnus tai PIN");
     }
   });
 }
+
 
 function signup() {
   const userId = document.getElementById("userId").value;
