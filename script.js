@@ -335,19 +335,7 @@ function rejectLoan(userId) {
   });
 }
 
-function invest() {
-  const userId = localStorage.getItem("currentUserId");
-  if (!userId) {
-    alert("Kirjaudu ensin sisään.");
-    return;
-  }
-  const target = document.getElementById("investmentTarget").value;
-  const amount = parseFloat(document.getElementById("investmentAmount").value);
 
-  if (isNaN(amount) || amount <= 0) {
-    alert("Anna kelvollinen sijoitussumma.");
-    return;
-  }
 
   const userRef = db.collection("users").doc(userId);
 
@@ -417,3 +405,18 @@ function login() {
 //   }
 // };
 
+
+
+function invest() {
+  const userId = localStorage.getItem("currentUserId");
+  if (!userId) {
+    alert("Kirjaudu ensin sisään.");
+    return;
+  }
+  const target = document.getElementById("investmentTarget").value;
+  const amount = parseFloat(document.getElementById("investmentAmount").value);
+
+  if (isNaN(amount) || amount <= 0) {
+    alert("Anna kelvollinen sijoitussumma.");
+    return;
+  }
