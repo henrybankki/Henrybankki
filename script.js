@@ -239,3 +239,135 @@ window.onload = () => {
     login();
   }
 };
+
+// Käyttäjä pyytää lainaa
+function requestLoan() {
+  const userId = localStorage.getItem("currentUserId");
+  if (!userId) {
+    alert("Kirjaudu ensin sisään.");
+    return;
+  }
+
+  const amount = parseFloat(document.getElementById("loanAmount").value);
+  if (isNaN(amount) || amount <= 0) {
+    alert("Anna kelvollinen lainan summa.");
+    return;
+  }
+
+  const userRef = db.collection("users").doc(userId);
+
+  userRef.get().then(doc => {
+    if (!doc.exists) {
+      alert("Käyttäjää ei löytynyt.");
+      return;
+    }
+
+    const data = doc.data();
+    if (data.loanRequested) {
+      alert("Sinulla on jo aktiivinen lainapyyntö.");
+      return;
+    }
+
+    userRef.update({
+      loanRequested: true,
+      loanAmount: amount
+    }).then(() => {
+      alert("Lainapyyntö lähetetty. Odota hyväksyntää.");
+      document.getElementById("loanAmount").value = "";
+    });
+  });
+}
+
+// Admin lataa lainapyyntöjä
+function loadLoanRequests() {
+  const userId = localStorage.getItem("currentUserId");
+  if (userId !== "011100") return; // vain admin
+
+  document.getElementById("loan-requests").style.display = "block";
+
+  db.collection("users").where("loanRequested", "==", true).onSnapshot(snapshot => {
+    const container = document.getElementById("loan-requests-list");
+    container.innerHTML = "";
+
+    snapshot.forEach(doc => {
+      const id = doc.id;
+      const data = doc.data();
+      const amount = data.loanAmount;
+
+      const div = document.createElement("div");
+      div.innerHTML = `
+        Käyttäjä <strong>${id}</strong> pyytää lainaa: ${amount} €
+        <button onclick="approveLoan('${id}', ${amount})">Hyväksy</button>
+        <button onclick="rejectLoan('${id}')">Hylkää</button>
+      `;
+      container.appendChild(div);
+    });
+  });
+}
+
+// Admin hyväksyy lainan
+function approveLoan(userId, amount) {
+  const dueDate = new Date();
+  dueDate.setMonth(dueDate.getMonth() + 2); // lainan eräpäivä 2kk päästä
+
+  const userRef = db.collection("users").doc(userId);
+
+  userRef.update({
+    loan: amount,
+    loanRequested: false,
+    loanAmount: 0,
+    loanDueDate: dueDate.toISOString(),
+    balance: firebase.firestore.FieldValue.increment(amount)
+  }).then(() => {
+    alert(`Laina ${amount} € hyväksytty käyttäjälle ${userId}.`);
+  });
+}
+
+// Admin hylkää lainan
+function rejectLoan(userId) {
+  const userRef = db.collection("users").doc(userId);
+
+  userRef.update({
+    loanRequested: false,
+    loanAmount: 0
+  }).then(() => {
+    alert(`Lainapyyntö hylätty käyttäjältä ${userId}.`);
+  });
+}
+
+// Kutsu adminin latausfunktio kirjautumisen yhteydessä
+function login() {
+  const userId = document.getElementById("userId").value;
+  const pin = document.getElementById("pin").value;
+
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().pin === pin) {
+      localStorage.setItem("currentUserId", userId);
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("main-section").style.display = "block";
+      document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
+      loadBalance();
+      loadUserInvoices();
+
+      if (userId === "011100") {
+        document.getElementById("admin-tools").style.display = "block";
+        loadLoanRequests(); // Lataa lainapyyntöjä adminille
+        assignMissingAccountNumbers();
+      } else {
+        document.getElementById("admin-tools").style.display = "none";
+        document.getElementById("loan-requests").style.display = "none";
+      }
+    } else {
+      alert("Virheellinen käyttäjätunnus tai PIN");
+    }
+  });
+}
+
+// Lisäksi kutsu tätä ikkunan latauduttua (jos haluat automaattisen kirjautumisen)
+// window.onload = () => {
+//   const userId = localStorage.getItem("currentUserId");
+//   if (userId) {
+//     login();
+//   }
+// };
+
