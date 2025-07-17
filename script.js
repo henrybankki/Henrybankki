@@ -144,3 +144,52 @@ window.onload = () => {
     login(); // automaattinen uudelleenkirjautuminen
   }
 };
+function login() {
+  const userId = document.getElementById("userId").value;
+  const pin = document.getElementById("pin").value;
+
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().pin === pin) {
+      localStorage.setItem("currentUserId", userId);
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("main-section").style.display = "block";
+      document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
+      loadBalance();
+      loadUserInvoices();
+
+      if (userId === "011100") { // Admin-tarkistus
+        document.getElementById("admin-tools").style.display = "block";
+        assignMissingAccountNumbers();
+      } else {
+        document.getElementById("admin-tools").style.display = "none";
+      }
+    } else {
+      alert("Virheellinen käyttäjätunnus tai PIN");
+    }
+  });
+}
+
+// Rahan lisäys vain adminille
+function addMoney() {
+  const currentUserId = localStorage.getItem("currentUserId");
+  if (currentUserId !== "011100") {
+    return alert("Toiminto sallittu vain adminille.");
+  }
+
+  const targetUserId = document.getElementById("add-money-user-id").value.trim();
+  const amount = parseFloat(document.getElementById("add-money-amount").value);
+
+  if (!targetUserId || isNaN(amount) || amount <= 0) {
+    return alert("Anna kelvollinen käyttäjä ja summa.");
+  }
+
+  const userRef = db.collection("users").doc(targetUserId);
+  userRef.get().then(doc => {
+    if (!doc.exists) return alert("Käyttäjää ei löytynyt.");
+    const currentBalance = doc.data().balance || 0;
+    userRef.update({ balance: currentBalance + amount })
+      .then(() => {
+        alert(`Lisättiin ${amount} € käyttäjälle ${targetUserId}`);
+      });
+  });
+}
