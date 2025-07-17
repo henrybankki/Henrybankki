@@ -67,9 +67,26 @@
     <input type="number" id="investAmount" placeholder="Sijoita €" />
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
+<h4>Muut sijoituskohteet</h4>
+<select id="investmentTarget">
+  <option value="bitcoin">Bitcoin</option>
+  <option value="ethereum">Ethereum</option>
+  <option value="dogecoin">Dogecoin</option>
+  <option value="nokia">Nokia</option>
+  <option value="tesla">Tesla</option>
+  <option value="metsä">Metsärahasto</option>
+  <option value="aurinko">Aurinkosähkö</option>
+</select>
+<input type="number" id="customInvestAmount" placeholder="Summa €" />
+<button onclick="investInTarget()">Sijoita</button>
 
     <h2>Sijoituksen kurssikäyrä</h2>
     <canvas id="investmentChart"></canvas>
+
+    <h3>Maksamattomat laskut</h3>
+<ul id="invoiceList"></ul>
+<button onclick="payInvoice()">Maksa valittu lasku</button>
+
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
