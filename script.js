@@ -19,10 +19,11 @@ function login() {
       loadBalance();
       loadUserInvoices();
 
-      const currentUserId = localStorage.getItem("currentUserId");
-      if (currentUserId === "011100") {
+      if (userId === "011100") {
         document.getElementById("admin-tools").style.display = "block";
         assignMissingAccountNumbers();
+      } else {
+        document.getElementById("admin-tools").style.display = "none";
       }
     } else {
       alert("Virheellinen käyttäjätunnus tai PIN");
@@ -59,15 +60,62 @@ function loadBalance() {
   const userId = localStorage.getItem("currentUserId");
   db.collection("users").doc(userId).get().then(doc => {
     const data = doc.data();
-    document.getElementById("balance-display").innerText = `Saldo: ${data.balance} €`;
+    document.getElementById("balance-display").innerText = `Saldo: ${data.balance.toFixed(2)} €`;
     document.getElementById("account-number-display").innerText = `Tilinumero: ${data.accountNumber || "ei saatavilla"}`;
   });
 }
 
+function sendMoney() {
+  const senderId = localStorage.getItem("currentUserId");
+  const receiverId = document.getElementById("sendReceiverId").value.trim();
+  const amount = parseFloat(document.getElementById("sendAmount").value);
+
+  if (!receiverId || isNaN(amount) || amount <= 0) {
+    alert("Täytä vastaanottajan käyttäjätunnus ja kelvollinen summa.");
+    return;
+  }
+  if (receiverId === senderId) {
+    alert("Et voi lähettää rahaa itsellesi.");
+    return;
+  }
+
+  const senderRef = db.collection("users").doc(senderId);
+  const receiverRef = db.collection("users").doc(receiverId);
+
+  receiverRef.get().then(doc => {
+    if (!doc.exists) {
+      alert("Vastaanottajaa ei löytynyt.");
+      return;
+    }
+
+    db.runTransaction(async (transaction) => {
+      const senderDoc = await transaction.get(senderRef);
+      const senderBalance = senderDoc.data().balance || 0;
+
+      if (senderBalance < amount) {
+        throw "Saldo ei riitä.";
+      }
+
+      transaction.update(senderRef, { balance: senderBalance - amount });
+
+      const receiverBalance = doc.data().balance || 0;
+      transaction.update(receiverRef, { balance: receiverBalance + amount });
+    }).then(() => {
+      alert("Raha lähetetty onnistuneesti!");
+      loadBalance();
+    }).catch(err => alert("Virhe siirrossa: " + err));
+  });
+}
+
 function createInvoice() {
-  const targetUserId = document.getElementById("invoice-user-id").value;
+  const targetUserId = document.getElementById("invoice-user-id").value.trim();
   const amount = parseFloat(document.getElementById("invoice-amount").value);
   const reference = "RF" + Math.floor(100000000 + Math.random() * 900000000); // yksinkertainen viite
+
+  if (!targetUserId || isNaN(amount) || amount <= 0) {
+    alert("Täytä laskun tiedot oikein.");
+    return;
+  }
 
   db.collection("invoices").add({
     userId: targetUserId,
@@ -77,6 +125,7 @@ function createInvoice() {
     created: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     alert("Lasku luotu!");
+    loadUserInvoices();
   });
 }
 
@@ -85,16 +134,25 @@ function loadUserInvoices() {
   const list = document.getElementById("invoice-list");
   list.innerHTML = "";
 
-  db.collection("invoices").where("userId", "==", userId).where("paid", "==", false).get()
+  db.collection("invoices")
+    .where("userId", "==", userId)
+    .where("paid", "==", false)
+    .get()
     .then(snapshot => {
+      if (snapshot.empty) {
+        list.innerHTML = "<li>Ei avoimia laskuja</li>";
+        return;
+      }
       snapshot.forEach(doc => {
         const data = doc.data();
         const li = document.createElement("li");
-        li.innerText = `Lasku ${data.amount} €, Viite: ${data.reference}`;
+        li.innerText = `Lasku ${data.amount.toFixed(2)} €, Viite: ${data.reference}`;
+
         const payBtn = document.createElement("button");
         payBtn.innerText = "Maksa lasku";
         payBtn.onclick = () => payInvoice(doc.id, data.amount);
         li.appendChild(payBtn);
+
         list.appendChild(li);
       });
     });
@@ -103,25 +161,62 @@ function loadUserInvoices() {
 function payInvoice(invoiceId, amount) {
   const userId = localStorage.getItem("currentUserId");
   const userRef = db.collection("users").doc(userId);
+  const invoiceRef = db.collection("invoices").doc(invoiceId);
 
-  db.runTransaction(async (t) => {
-    const userDoc = await t.get(userRef);
-    const balance = userDoc.data().balance;
+  db.runTransaction(async (transaction) => {
+    const userDoc = await transaction.get(userRef);
+    const invoiceDoc = await transaction.get(invoiceRef);
 
+    if (!userDoc.exists || !invoiceDoc.exists) {
+      throw "Tiedot eivät ole saatavilla.";
+    }
+
+    const balance = userDoc.data().balance || 0;
     if (balance < amount) {
       alert("Ei riittävästi varoja.");
       return;
     }
 
-    t.update(userRef, { balance: balance - amount });
-    t.update(db.collection("invoices").doc(invoiceId), {
+    transaction.update(userRef, { balance: balance - amount });
+    transaction.update(invoiceRef, {
       paid: true,
       paidAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-
+  }).then(() => {
     alert("Lasku maksettu!");
     loadBalance();
     loadUserInvoices();
+  }).catch(err => {
+    alert("Virhe maksussa: " + err);
+  });
+}
+
+function addMoney() {
+  const currentUserId = localStorage.getItem("currentUserId");
+  if (currentUserId !== "011100") {
+    alert("Vain admin voi lisätä rahaa.");
+    return;
+  }
+
+  const targetUserId = document.getElementById("add-money-user-id").value.trim();
+  const amount = parseFloat(document.getElementById("add-money-amount").value);
+
+  if (!targetUserId || isNaN(amount) || amount <= 0) {
+    alert("Täytä tiedot oikein.");
+    return;
+  }
+
+  const userRef = db.collection("users").doc(targetUserId);
+
+  userRef.get().then(doc => {
+    if (!doc.exists) {
+      alert("Käyttäjää ei löytynyt.");
+      return;
+    }
+    const currentBalance = doc.data().balance || 0;
+    userRef.update({ balance: currentBalance + amount }).then(() => {
+      alert(`Lisättiin ${amount.toFixed(2)} € käyttäjälle ${targetUserId}.`);
+    });
   });
 }
 
@@ -141,55 +236,6 @@ function assignMissingAccountNumbers() {
 window.onload = () => {
   const userId = localStorage.getItem("currentUserId");
   if (userId) {
-    login(); // automaattinen uudelleenkirjautuminen
+    login();
   }
 };
-function login() {
-  const userId = document.getElementById("userId").value;
-  const pin = document.getElementById("pin").value;
-
-  db.collection("users").doc(userId).get().then(doc => {
-    if (doc.exists && doc.data().pin === pin) {
-      localStorage.setItem("currentUserId", userId);
-      document.getElementById("auth-section").style.display = "none";
-      document.getElementById("main-section").style.display = "block";
-      document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
-      loadBalance();
-      loadUserInvoices();
-
-      if (userId === "011100") { // Admin-tarkistus
-        document.getElementById("admin-tools").style.display = "block";
-        assignMissingAccountNumbers();
-      } else {
-        document.getElementById("admin-tools").style.display = "none";
-      }
-    } else {
-      alert("Virheellinen käyttäjätunnus tai PIN");
-    }
-  });
-}
-
-// Rahan lisäys vain adminille
-function addMoney() {
-  const currentUserId = localStorage.getItem("currentUserId");
-  if (currentUserId !== "011100") {
-    return alert("Toiminto sallittu vain adminille.");
-  }
-
-  const targetUserId = document.getElementById("add-money-user-id").value.trim();
-  const amount = parseFloat(document.getElementById("add-money-amount").value);
-
-  if (!targetUserId || isNaN(amount) || amount <= 0) {
-    return alert("Anna kelvollinen käyttäjä ja summa.");
-  }
-
-  const userRef = db.collection("users").doc(targetUserId);
-  userRef.get().then(doc => {
-    if (!doc.exists) return alert("Käyttäjää ei löytynyt.");
-    const currentBalance = doc.data().balance || 0;
-    userRef.update({ balance: currentBalance + amount })
-      .then(() => {
-        alert(`Lisättiin ${amount} € käyttäjälle ${targetUserId}`);
-      });
-  });
-}
