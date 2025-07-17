@@ -1,3 +1,13 @@
+function startAutoUpdate(symbol) {
+  if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+  loadInvestmentGraph(symbol);
+  autoUpdateInterval = setInterval(() => {
+    loadInvestmentGraph(symbol);
+  }, 10000); // päivitys 10 s välein
+}
+
+
+
 // Firebase Firestore
 const db = firebase.firestore();
 
