@@ -50,109 +50,37 @@ function loadBalance() {
   });
 }
 
-let investmentChart;
+// Poistetaan vanha loadInvestmentGraph ja käytetään vain tätä API-versiota
 
-function loadInvestmentGraph() {
-  const ctx = document.getElementById('investmentChart').getContext('2d');
-
-  // Simuloidaan sijoitusten arvon kehitystä
-  const labels = ['Tammi', 'Helmi', 'Maalis', 'Huhti', 'Touko', 'Kesä'];
-  const data = [100, 110, 105, 120, 125, 140];
-
-  if (investmentChart) {
-    investmentChart.destroy(); // tuhoaa vanhan jos on
-  }
-
-  investmentChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Sijoituksen arvo (€)',
-        data: data,
-        borderColor: 'blue',
-        backgroundColor: 'rgba(0, 0, 255, 0.1)',
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: false
-        }
-      }
-    }
-  });
-}
-
-
-const cryptoMap = {
-  BTC: "bitcoin",
-  ETH: "ethereum",
-  BNB: "binancecoin",
-  SOL: "solana",
-  XRP: "ripple"
-};
-
-const stockMap = {
-  NOKIA: "NOKIA.HE",
-  KONE: "KNEBV.HE",
-  FORTUM: "FORTUM.HE",
-  SAMPO: "SAMPO.HE",
-  NESTE: "NESTE.HE"
-};
-
-let investmentChart = null;
-let currentSymbol = null;
-let autoUpdateInterval = null;
-
-// Lataa ja piirtää graafin
 async function loadInvestmentGraph(symbol) {
-  currentSymbol = symbol; // Päivitetään valittu kohde
+  currentSymbol = symbol;
   const ctx = document.getElementById("investmentChart").getContext("2d");
 
-  let labels = [];
-  let prices = [];
+  let labels = [], prices = [];
 
   try {
     if (cryptoMap[symbol]) {
-      // CoinGecko API (krypto)
       const id = cryptoMap[symbol];
       const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=eur&days=30`;
       const res = await fetch(url);
       const data = await res.json();
-      labels = data.prices.map(p => {
-        const date = new Date(p[0]);
-        return date.toLocaleDateString("fi-FI", { day: "2-digit", month: "short" });
-      });
+      labels = data.prices.map(p => new Date(p[0]).toLocaleDateString("fi-FI", { day: "2-digit", month: "short" }));
       prices = data.prices.map(p => p[1]);
     } else if (stockMap[symbol]) {
-      // Yahoo Finance API + CORS proxy
       const ticker = stockMap[symbol];
       const url = `https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1mo&interval=1d`;
       const res = await fetch(url);
       const json = await res.json();
       const result = json.chart.result[0];
-      const timestamps = result.timestamp;
-      const closePrices = result.indicators.quote[0].close;
-
-      labels = timestamps.map(ts => {
-        const date = new Date(ts * 1000);
-        return date.toLocaleDateString("fi-FI", { day: "2-digit", month: "short" });
-      });
-      prices = closePrices;
-    } else {
-      console.warn("Tuntematon symboli:", symbol);
-      return;
+      labels = result.timestamp.map(ts => new Date(ts * 1000).toLocaleDateString("fi-FI", { day: "2-digit", month: "short" }));
+      prices = result.indicators.quote[0].close;
     }
 
-    // Piirretään Chart.js
     if (investmentChart) investmentChart.destroy();
     investmentChart = new Chart(ctx, {
       type: "line",
       data: {
-        labels: labels,
+        labels,
         datasets: [{
           label: symbol,
           data: prices,
@@ -161,13 +89,7 @@ async function loadInvestmentGraph(symbol) {
           fill: true
         }]
       },
-      options: {
-        responsive: true,
-        animation: false, // nopeampi päivitys
-        scales: {
-          y: { beginAtZero: false }
-        }
-      }
+      options: { responsive: true }
     });
 
   } catch (err) {
@@ -175,13 +97,11 @@ async function loadInvestmentGraph(symbol) {
   }
 }
 
-// Kun valitaan uusi sijoituskohde
 function onInvestmentTargetChange() {
   const symbol = document.getElementById("investment-target").value;
   startAutoUpdate(symbol);
 }
 
-// Lataa sijoituskohdelista
 function loadInvestmentTargets() {
   const targets = [
     { id: "BTC", name: "Bitcoin" },
@@ -204,16 +124,48 @@ function loadInvestmentTargets() {
     sel.appendChild(opt);
   });
 
-  // Käynnistä päivitys ensimmäiselle kohteelle
   startAutoUpdate(targets[0].id);
 }
 
-// Aloita automaattinen päivitys
-function startAutoUpdate(symbol) {
-  if (autoUpdateInterval) clearInterval(autoUpdateInterval);
-  loadInvestmentGraph(symbol);
-  autoUpdateInterval = setInterval(() => {
-    loadInvestmentGraph(symbol);
-  }, 5000); // päivitys 5 sek välein
+// 🔹 Uudet funktiot
+async function invest() {
+  const userId = localStorage.getItem("currentUserId");
+  const amount = parseFloat(document.getElementById("investment-amount").value);
+  if (!amount || amount <= 0) return alert("Anna oikea summa");
+
+  const docRef = db.collection("users").doc(userId);
+  const docSnap = await docRef.get();
+  const data = docSnap.data();
+
+  if (data.balance < amount) return alert("Ei tarpeeksi saldoa");
+
+  // Vähennä saldo
+  await docRef.update({
+    balance: data.balance - amount,
+    investment: {
+      symbol: currentSymbol,
+      amount: (data.investment?.amount || 0) + amount
+    }
+  });
+
+  alert(`Sijoitettu ${amount} € kohteeseen ${currentSymbol}`);
+  loadBalance();
 }
 
+async function redeemInvestment() {
+  const userId = localStorage.getItem("currentUserId");
+  const docRef = db.collection("users").doc(userId);
+  const docSnap = await docRef.get();
+  const data = docSnap.data();
+
+  if (!data.investment || data.investment.amount <= 0) return alert("Ei sijoituksia lunastettavaksi");
+
+  const redeemed = data.investment.amount;
+  await docRef.update({
+    balance: data.balance + redeemed,
+    investment: firebase.firestore.FieldValue.delete()
+  });
+
+  alert(`Lunastettu ${redeemed} €`);
+  loadBalance();
+}
