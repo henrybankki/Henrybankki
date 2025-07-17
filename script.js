@@ -92,39 +92,36 @@ function loadUserData(id) {
 }
 
 function sendMoney() {
-  const receiverId = document.getElementById("receiverId").value.trim();
+  const receiverAccount = document.getElementById("receiverId").value.trim();
   const amount = parseFloat(document.getElementById("amount").value);
 
-  if (!receiverId || isNaN(amount) || amount <= 0) {
-    return alert("Anna vastaanottaja ja positiivinen summa.");
+  if (!receiverAccount || isNaN(amount) || amount <= 0) {
+    return alert("Anna tilinumero ja summa.");
   }
 
   const senderRef = db.collection("users").doc(currentUserId);
-  const receiverRef = db.collection("users").doc(receiverId);
 
-  db.runTransaction(async tx => {
-    const sender = await tx.get(senderRef);
-    const receiver = await tx.get(receiverRef);
-    const balance = sender.data().balance;
+  db.collection("users").where("accountNumber", "==", receiverAccount)
+    .get().then(snapshot => {
+      if (snapshot.empty) return alert("Vastaanottajaa ei löytynyt.");
+      const receiverDoc = snapshot.docs[0];
+      const receiverRef = receiverDoc.ref;
 
-    if (balance < amount) throw new Error("Ei tarpeeksi saldoa");
+      db.runTransaction(async tx => {
+        const sender = await tx.get(senderRef);
+        const balance = sender.data().balance;
 
-    tx.update(senderRef, { balance: balance - amount });
-    tx.set(receiverRef, {
-      balance: (receiver.exists ? receiver.data().balance : 0) + amount
-    }, { merge: true });
+        if (balance < amount) throw new Error("Ei tarpeeksi saldoa");
 
-    const now = firebase.firestore.FieldValue.serverTimestamp();
-    db.collection("users").doc(currentUserId).collection("transactions").add({
-      type: "Lähetys", to: receiverId, amount, timestamp: now
+        tx.update(senderRef, { balance: balance - amount });
+        tx.update(receiverRef, {
+          balance: firebase.firestore.FieldValue.increment(amount)
+        });
+      }).then(() => alert("Rahat lähetetty!"))
+        .catch(e => alert("Virhe: " + e.message));
     });
-    db.collection("users").doc(receiverId).collection("transactions").add({
-      type: "Vastaanotto", from: currentUserId, amount, timestamp: now
-    });
-  })
-    .then(() => alert("Rahat lähetetty!"))
-    .catch(err => alert("Virhe: " + (err.message || err)));
 }
+
 
 function logout() {
   auth.signOut().then(() => {
@@ -371,3 +368,50 @@ function loadTransferHistory(id) {
   }).then(() => alert("Lasku luotu viitteellä: " + reference));
 }
 
+let selectedInvoiceId = null;
+
+function loadUserInvoices() {
+  const ul = document.getElementById("invoiceList");
+  ul.innerHTML = "";
+
+  db.collection("invoices")
+    .where("userId", "==", currentUserId)
+    .where("paid", "==", false)
+    .get()
+    .then(snapshot => {
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${d.amount} € – Viite: ${d.reference}`;
+        li.onclick = () => {
+          selectedInvoiceId = doc.id;
+          alert("Lasku valittu");
+        };
+        ul.appendChild(li);
+      });
+    });
+}
+
+function payInvoice() {
+  if (!selectedInvoiceId) return alert("Valitse lasku ensin.");
+
+  const invoiceRef = db.collection("invoices").doc(selectedInvoiceId);
+  const userRef = db.collection("users").doc(currentUserId);
+
+  db.runTransaction(async tx => {
+    const invoiceDoc = await tx.get(invoiceRef);
+    const userDoc = await tx.get(userRef);
+    const data = invoiceDoc.data();
+    if (!data || data.paid) throw new Error("Lasku ei kelpaa.");
+
+    const balance = userDoc.data().balance;
+    if (balance < data.amount) throw new Error("Saldo ei riitä.");
+
+    tx.update(userRef, { balance: balance - data.amount });
+    tx.update(invoiceRef, { paid: true, paidAt: firebase.firestore.Timestamp.now() });
+
+    selectedInvoiceId = null;
+  })
+    .then(() => alert("Lasku maksettu!"))
+    .catch(err => alert("Virhe maksussa: " + err.message));
+}
