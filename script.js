@@ -4,6 +4,7 @@ const db = firebase.firestore();
 
 // Lisää JavaScript-toiminnot tänne (esim. login, signup jne.)
 function login() {
+  loadInvestmentTargets();
   const userId = document.getElementById("userId").value;
   const pin = document.getElementById("pin").value;
 
