@@ -28,12 +28,19 @@
     <h3>Laskut</h3>
     <ul id="invoice-list"></ul>
 
-    <div id="admin-tools" style="display:none;">
-      <h3>Luo uusi lasku</h3>
-      <input type="text" id="invoice-user-id" placeholder="Käyttäjätunnus">
-      <input type="number" id="invoice-amount" placeholder="Summa">
-      <button onclick="createInvoice()">Luo lasku</button>
-    </div>
+
+      <div id="admin-tools" style="display:none;">
+  <h3>Lisää rahaa käyttäjälle</h3>
+  <input type="text" id="add-money-user-id" placeholder="Käyttäjätunnus">
+  <input type="number" id="add-money-amount" placeholder="Summa €">
+  <button onclick="addMoney()">Lisää rahaa</button>
+
+  <h3>Luo uusi lasku</h3>
+  <input type="text" id="invoice-user-id" placeholder="Käyttäjätunnus">
+  <input type="number" id="invoice-amount" placeholder="Summa">
+  <button onclick="createInvoice()">Luo lasku</button>
+</div>
+
 
     <button onclick="logout()">Kirjaudu ulos</button>
   </div>
