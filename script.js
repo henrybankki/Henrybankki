@@ -420,3 +420,175 @@ function invest() {
     alert("Anna kelvollinen sijoitussumma.");
     return;
   }
+
+
+
+  let chart = null;
+let currentInvestmentTarget = "bitcoin";
+let investmentUpdateInterval = null;
+
+function onInvestmentTargetChange() {
+  const select = document.getElementById("investmentTarget");
+  currentInvestmentTarget = select.value;
+  fetchInvestmentChart();
+}
+
+function invest() {
+  const amount = parseFloat(document.getElementById("investAmount").value);
+  if (isNaN(amount) || amount <= 0) {
+    alert("Anna kelvollinen summa.");
+    return;
+  }
+  const userId = localStorage.getItem("currentUserId");
+  if (!userId) {
+    alert("Kirjaudu ensin.");
+    return;
+  }
+
+  const userRef = db.collection("users").doc(userId);
+  const investKey = `invest_${currentInvestmentTarget}`;
+
+  userRef.get().then(doc => {
+    const data = doc.data() || {};
+    const balance = data.balance || 0;
+    if (balance < amount) {
+      alert("Ei tarpeeksi saldoa.");
+      return;
+    }
+
+    // Päivitetään käyttäjän saldo ja sijoitus valittuun kohteeseen
+    userRef.update({
+      balance: balance - amount,
+      [investKey]: (data[investKey] || 0) + amount
+    }).then(() => {
+      alert(`Sijoitit ${amount.toFixed(2)} € kohteeseen ${currentInvestmentTarget}.`);
+      document.getElementById("investAmount").value = "";
+      loadBalance();
+    });
+  });
+}
+
+// Lunastaa sijoituksen valitussa kohteessa (palauttaa summan käyttäjän saldoon)
+function redeemInvestment() {
+  const userId = localStorage.getItem("currentUserId");
+  if (!userId) {
+    alert("Kirjaudu ensin.");
+    return;
+  }
+
+  const userRef = db.collection("users").doc(userId);
+  const investKey = `invest_${currentInvestmentTarget}`;
+
+  userRef.get().then(doc => {
+    const data = doc.data() || {};
+    const investedAmount = data[investKey] || 0;
+    if (investedAmount <= 0) {
+      alert("Ei sijoitusta lunastettavaksi tässä kohteessa.");
+      return;
+    }
+
+    // Oletetaan, että sijoituksen arvo päivittyy kurssin mukaan (simuloidaan)
+    // Tässä lunastetaan sijoitus sen alkuperäisellä summalla, halutessa voisi tehdä monimutkaisempaa laskentaa
+    userRef.update({
+      balance: (data.balance || 0) + investedAmount,
+      [investKey]: 0
+    }).then(() => {
+      alert(`Lunastit sijoituksen ${currentInvestmentTarget} kohteesta: ${investedAmount.toFixed(2)} € palautettu saldoon.`);
+      loadBalance();
+    });
+  });
+}
+
+// Haetaan ja piirretään sijoituskohteen kurssikäyrä
+function fetchInvestmentChart() {
+  if (!currentInvestmentTarget) return;
+
+  db.collection("investmentRates")
+    .doc(currentInvestmentTarget)
+    .collection("rates")
+    .orderBy("timestamp", "desc")
+    .limit(20)
+    .get()
+    .then(snapshot => {
+      const data = [];
+      snapshot.forEach(doc => data.unshift(doc.data().value));
+      renderChart(data);
+    })
+    .catch(err => {
+      console.error("Virhe haettaessa kurssidataa:", err);
+    });
+}
+
+function renderChart(data) {
+  const ctx = document.getElementById("investmentChart").getContext("2d");
+
+  if (chart) {
+    chart.destroy();
+  }
+
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.map((_, i) => `T${i + 1}`),
+      datasets: [{
+        label: `${currentInvestmentTarget} kurssi`,
+        data: data,
+        borderColor: 'blue',
+        backgroundColor: 'rgba(0,0,255,0.1)',
+        tension: 0.2,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: false }
+      }
+    }
+  });
+}
+
+// Simuloi ja päivittää kurssidataa Firestoreen (tämä toiminto adminille tai serverillä)
+// Tässä esimerkissä tehdään kurssin arvo pyörivä +-5% viimeisestä arvosta
+function simulatePriceChanges() {
+  const investmentTargets = [
+    "bitcoin", "ethereum", "dogecoin", "nokia", "tesla",
+    "metsarahasto", "aurinkosahko", "pankki", "energia", "kiinteistot"
+  ];
+
+  investmentTargets.forEach(target => {
+    const ratesRef = db.collection("investmentRates").doc(target).collection("rates");
+
+    // Haetaan viimeisin arvo
+    ratesRef.orderBy("timestamp", "desc").limit(1).get()
+      .then(snapshot => {
+        let lastValue = 100; // oletusarvo jos dataa ei ole
+        if (!snapshot.empty) {
+          lastValue = snapshot.docs[0].data().value;
+        }
+
+        // Muutoksen laskenta: +-5%
+        const changeFactor = 1 + (Math.random() * 0.10 - 0.05);
+        let newValue = lastValue * changeFactor;
+        if (newValue < 1) newValue = 1; // minimiraja
+
+        ratesRef.add({
+          value: parseFloat(newValue.toFixed(2)),
+          timestamp: firebase.firestore.Timestamp.now()
+        });
+      });
+  });
+}
+
+// Päivitetään kurssit automaattisesti 5 sekunnin välein
+setInterval(() => {
+  simulatePriceChanges();
+  fetchInvestmentChart();
+}, 5000);
+
+// Aloitetaan kun sivu latautuu
+window.onload = () => {
+  fetchInvestmentChart();
+  onInvestmentTargetChange();
+};
+
