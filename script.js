@@ -342,3 +342,32 @@ function loadTransferHistory(id) {
       });
     });
       }
+
+
+
+
+
+
+
+
+
+
+
+
+  function createInvoice() {
+  const targetId = document.getElementById("invoice-target-id").value.trim();
+  const amount = parseFloat(document.getElementById("invoice-amount").value);
+  if (!targetId || isNaN(amount) || amount <= 0) return alert("Täytä kentät oikein.");
+
+  const ref = db.collection("invoices").doc();
+  const reference = "RF" + Math.floor(100000000 + Math.random() * 900000000); // yksinkertainen viitenumero
+
+  ref.set({
+    userId: targetId,
+    amount,
+    paid: false,
+    reference,
+    created: firebase.firestore.Timestamp.now()
+  }).then(() => alert("Lasku luotu viitteellä: " + reference));
+}
+
