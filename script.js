@@ -1,230 +1,280 @@
-// Firebase init (firebase-config.js pitää olla mukana!)
+// Firebase Firestore
 const db = firebase.firestore();
 
-// Admin-tunnukset
-const ADMIN_USER = "011100";
-const ADMIN_PIN = "143000";
+let investmentChart = null;
+let currentSymbol = null;
+let autoUpdateInterval = null;
 
-// ========== Kirjautuminen ==========
-async function login() {
-  const userId = document.getElementById("userId").value.trim();
-  const pin = document.getElementById("pin").value.trim();
+// 🔐 Login
+function login() {
+  const userId = document.getElementById("userId").value;
+  const pin = document.getElementById("pin").value;
 
-  if (!userId || !pin) {
-    alert("Täytä tunnus ja PIN.");
-    return;
-  }
-
-  try {
-    const userDoc = await db.collection("users").doc(userId).get();
-    if (!userDoc.exists) {
-      alert("Käyttäjää ei löytynyt.");
-      return;
-    }
-
-    const data = userDoc.data();
-    if (data.pin !== pin) {
-      alert("Virheellinen PIN.");
-      return;
-    }
-
-    // Kirjautuminen onnistui
-    localStorage.setItem("currentUserId", userId);
-    localStorage.setItem("currentUserIsAdmin", data.isAdmin ? "1" : "0");
-
-    document.getElementById("auth-section").style.display = "none";
-    document.getElementById("main-section").style.display = "block";
-    document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
-    
-    await loadBalance();
-    toggleAdminTools();
-    loadInvestmentTargets();
-    loadInvoices();
-    loadLoanRequests();
-
-  } catch (err) {
-    console.error(err);
-    alert("Virhe kirjautumisessa: " + err.message);
-  }
-}
-
-// Luo tili
-async function signup() {
-  const userId = document.getElementById("userId").value.trim();
-  const pin = document.getElementById("pin").value.trim();
-
-  if (!userId || !pin) {
-    alert("Täytä tunnus ja PIN.");
-    return;
-  }
-
-  const accountNumber = "FI" + Math.floor(1000000000 + Math.random() * 9000000000);
-  const isAdmin = (userId === ADMIN_USER && pin === ADMIN_PIN);
-
-  try {
-    await db.collection("users").doc(userId).set({
-      pin,
-      balance: 100,
-      accountNumber,
-      isAdmin
-    });
-    alert("Tili luotu!");
-  } catch (err) {
-    console.error(err);
-    alert("Virhe tilin luonnissa: " + err.message);
-  }
-}
-
-// Kirjaudu ulos
-function logout() {
-  localStorage.removeItem("currentUserId");
-  localStorage.removeItem("currentUserIsAdmin");
-  document.getElementById("main-section").style.display = "none";
-  document.getElementById("auth-section").style.display = "block";
-}
-
-// ========== Näytä/piilota admin-työkalut ==========
-function toggleAdminTools() {
-  const isAdmin = localStorage.getItem("currentUserIsAdmin") === "1";
-  document.getElementById("admin-tools").style.display = isAdmin ? "block" : "none";
-}
-
-// ========== Lataa saldo ==========
-async function loadBalance() {
-  const userId = localStorage.getItem("currentUserId");
-  const snap = await db.collection("users").doc(userId).get();
-  if (snap.exists) {
-    const data = snap.data();
-    document.getElementById("balance-display").innerText = `Saldo: ${data.balance.toFixed(2)} €`;
-    document.getElementById("account-number-display").innerText = `IBAN: ${data.accountNumber}`;
-  }
-}
-
-// ========== Rahansiirto IBAN:lla ==========
-async function sendMoney() {
-  const senderId = localStorage.getItem("currentUserId");
-  const amount = parseFloat(document.getElementById("send-amount").value);
-  const iban = document.getElementById("send-iban").value.trim();
-
-  if (isNaN(amount) || amount <= 0) {
-    alert("Anna kelvollinen summa.");
-    return;
-  }
-  if (!iban.startsWith("FI") || iban.length < 10) {
-    alert("Virheellinen IBAN.");
-    return;
-  }
-
-  try {
-    const senderRef = db.collection("users").doc(senderId);
-    const receiverSnap = await db.collection("users").where("accountNumber", "==", iban).get();
-    if (receiverSnap.empty) {
-      alert("Vastaanottajaa ei löytynyt.");
-      return;
-    }
-    const receiverRef = receiverSnap.docs[0].ref;
-
-    await db.runTransaction(async (tx) => {
-      const senderDoc = await tx.get(senderRef);
-      if (!senderDoc.exists) throw new Error("Lähettäjää ei löydy");
-      const senderBal = senderDoc.data().balance;
-      if (senderBal < amount) throw new Error("Ei tarpeeksi rahaa.");
-
-      const receiverDoc = await tx.get(receiverRef);
-      if (!receiverDoc.exists) throw new Error("Vastaanottajaa ei löydy");
-
-      tx.update(senderRef, { balance: senderBal - amount });
-      tx.update(receiverRef, { balance: (receiverDoc.data().balance || 0) + amount });
-    });
-
-    alert(`Lähetetty ${amount} € tilille ${iban}.`);
-    loadBalance();
-    document.getElementById("send-amount").value = "";
-    document.getElementById("send-iban").value = "";
-  } catch (err) {
-    console.error(err);
-    alert("Virhe siirrossa: " + err.message);
-  }
-}
-
-// ========== Admin: Lisää rahaa ==========
-async function addMoney() {
-  const isAdmin = localStorage.getItem("currentUserIsAdmin") === "1";
-  if (!isAdmin) {
-    alert("Ei oikeuksia.");
-    return;
-  }
-
-  const targetId = document.getElementById("target-user-id").value.trim();
-  const amount = parseFloat(document.getElementById("add-money-amount").value);
-
-  if (!targetId || isNaN(amount) || amount <= 0) {
-    alert("Virheellinen syöte.");
-    return;
-  }
-
-  try {
-    const targetRef = db.collection("users").doc(targetId);
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(targetRef);
-      if (!snap.exists) throw new Error("Käyttäjää ei löytynyt");
-      const newBal = (snap.data().balance || 0) + amount;
-      tx.update(targetRef, { balance: newBal });
-    });
-    alert(`Lisätty ${amount} € käyttäjälle ${targetId}.`);
-    document.getElementById("add-money-amount").value = "";
-  } catch (err) {
-    console.error(err);
-    alert("Virhe lisättäessä rahaa: " + err.message);
-  }
-}
-
-// ========== Sijoitukset ==========
-let chart;
-function loadInvestmentTargets() {
-  const select = document.getElementById("investment-target");
-  select.innerHTML = `
-    <option value="osakkeet">Osakkeet</option>
-    <option value="rahasto">Rahasto</option>
-    <option value="krypto">Kryptot</option>
-  `;
-  startInvestmentChart();
-}
-
-function startInvestmentChart() {
-  const ctx = document.getElementById("investmentChart").getContext("2d");
-  if (chart) chart.destroy();
-  chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ['1', '2', '3', '4', '5'],
-      datasets: [{
-        label: 'Arvon kehitys',
-        data: [100, 102, 105, 103, 108],
-        borderColor: 'blue'
-      }]
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().pin === pin) {
+      localStorage.setItem("currentUserId", userId);
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("main-section").style.display = "block";
+      document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
+      loadBalance();
+      loadInvestmentTargets();
+      loadTransferHistory();
+      loadInvoices();
+      if (userId === "011100" && pin === "143000") {
+        document.getElementById("admin-tools").style.display = "block";
+      }
+    } else {
+      alert("Virheellinen käyttäjätunnus tai PIN");
     }
   });
 }
 
-function invest() {
-  alert("Sijoitus tehty (simuloitu).");
+// 🔐 Signup
+function signup() {
+  const userId = document.getElementById("userId").value;
+  const pin = document.getElementById("pin").value;
+  const accountNumber = "FI" + Math.floor(10000000000 + Math.random() * 90000000000);
+
+  db.collection("users").doc(userId).set({
+    pin,
+    balance: 100,
+    accountNumber
+  }).then(() => {
+    alert("Tili luotu!");
+  });
 }
 
-function redeemInvestment() {
-  alert("Sijoitus lunastettu (simuloitu).");
+function logout() {
+  localStorage.removeItem("currentUserId");
+  document.getElementById("auth-section").style.display = "block";
+  document.getElementById("main-section").style.display = "none";
 }
 
-// ========== Laskut (simppeli placeholder) ==========
+function loadBalance() {
+  const userId = localStorage.getItem("currentUserId");
+  db.collection("users").doc(userId).get().then(doc => {
+    const data = doc.data();
+    document.getElementById("balance-display").innerText = `Saldo: ${data.balance} €`;
+    document.getElementById("account-number-display").innerText = `Tilinumero: ${data.accountNumber}`;
+  });
+}
+
+// ✅ Rahansiirto IBAN:lla
+async function sendMoney() {
+  const fromUser = localStorage.getItem("currentUserId");
+  const amount = parseFloat(document.getElementById("send-amount").value);
+  const targetIban = document.getElementById("send-iban").value;
+
+  if (!amount || amount <= 0 || !targetIban) {
+    alert("Anna summa ja IBAN");
+    return;
+  }
+
+  const fromDoc = await db.collection("users").doc(fromUser).get();
+  const fromData = fromDoc.data();
+
+  if (fromData.balance < amount) {
+    alert("Ei tarpeeksi saldoa");
+    return;
+  }
+
+  const toQuery = await db.collection("users").where("accountNumber", "==", targetIban).get();
+  if (toQuery.empty) {
+    alert("Vastaanottajaa ei löytynyt");
+    return;
+  }
+
+  const toDoc = toQuery.docs[0];
+  const toUserId = toDoc.id;
+  const toData = toDoc.data();
+
+  await db.collection("users").doc(fromUser).update({ balance: fromData.balance - amount });
+  await db.collection("users").doc(toUserId).update({ balance: toData.balance + amount });
+
+  // Tallenna historia
+  await db.collection("transfers").add({
+    from: fromData.accountNumber,
+    to: targetIban,
+    amount,
+    date: new Date().toISOString()
+  });
+
+  alert("Siirto onnistui!");
+  loadBalance();
+  loadTransferHistory();
+}
+
+// ✅ Näytä siirtohistoria
+function loadTransferHistory() {
+  const userId = localStorage.getItem("currentUserId");
+
+  db.collection("users").doc(userId).get().then(doc => {
+    const accountNumber = doc.data().accountNumber;
+
+    db.collection("transfers")
+      .where("from", "==", accountNumber)
+      .get()
+      .then(snapshot => {
+        let html = "<h3>Siirtohistoria</h3><ul>";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          html += `<li>Lähetetty ${data.amount} € → ${data.to} (${new Date(data.date).toLocaleString()})</li>`;
+        });
+        html += "</ul>";
+        document.getElementById("main-section").insertAdjacentHTML("beforeend", html);
+      });
+  });
+}
+
+// ✅ Laskujen lataus
 function loadInvoices() {
-  document.getElementById("invoice-list").innerHTML = "<li>Ei laskuja</li>";
+  const userId = localStorage.getItem("currentUserId");
+  db.collection("invoices").where("userId", "==", userId).get().then(snapshot => {
+    const list = document.getElementById("invoice-list");
+    list.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const li = document.createElement("li");
+      li.textContent = `Lasku: ${data.amount} €`;
+      list.appendChild(li);
+    });
+  });
 }
 
-// ========== Lainapyynnöt (simppeli placeholder) ==========
-function loadLoanRequests() {
-  document.getElementById("loan-requests").innerHTML = "<li>Ei lainapyyntöjä</li>";
+// ✅ Luo lasku (admin)
+function createInvoice() {
+  const userId = document.getElementById("invoice-user-id").value;
+  const amount = parseFloat(document.getElementById("invoice-amount").value);
+  if (!userId || !amount) {
+    alert("Anna käyttäjä ja summa");
+    return;
+  }
+  db.collection("invoices").add({ userId, amount });
+  alert("Lasku luotu");
 }
 
-function requestLoan() {
-  alert("Lainapyyntö lähetetty (simuloitu).");
+// ✅ Lisää rahaa (admin)
+function addMoney() {
+  const userId = document.getElementById("target-user-id").value;
+  const amount = parseFloat(document.getElementById("add-money-amount").value);
+  if (!userId || !amount) {
+    alert("Anna käyttäjä ja summa");
+    return;
+  }
+  db.collection("users").doc(userId).get().then(doc => {
+    if (!doc.exists) {
+      alert("Käyttäjää ei löydy");
+      return;
+    }
+    const currentBalance = doc.data().balance;
+    db.collection("users").doc(userId).update({ balance: currentBalance + amount });
+    alert("Rahaa lisätty");
+  });
+}
+
+// ✅ Sijoitukset (CoinGecko + Yahoo Finance)
+const cryptoMap = {
+  BTC: "bitcoin",
+  ETH: "ethereum",
+  BNB: "binancecoin",
+  SOL: "solana",
+  XRP: "ripple"
+};
+
+const stockMap = {
+  NOKIA: "NOKIA.HE",
+  KONE: "KNEBV.HE",
+  FORTUM: "FORTUM.HE",
+  SAMPO: "SAMPO.HE",
+  NESTE: "NESTE.HE"
+};
+
+function loadInvestmentTargets() {
+  const targets = [
+    { id: "BTC", name: "Bitcoin" },
+    { id: "ETH", name: "Ethereum" },
+    { id: "BNB", name: "Binance Coin" },
+    { id: "SOL", name: "Solana" },
+    { id: "XRP", name: "Ripple" },
+    { id: "NOKIA", name: "Nokia Oyj" },
+    { id: "KONE", name: "KONE Oyj" },
+    { id: "FORTUM", name: "Fortum Oyj" },
+    { id: "SAMPO", name: "Sampo Oyj" },
+    { id: "NESTE", name: "Neste Oyj" }
+  ];
+  const sel = document.getElementById("investment-target");
+  sel.innerHTML = "";
+  targets.forEach(t => {
+    const opt = document.createElement("option");
+    opt.value = t.id;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+  startAutoUpdate(targets[0].id);
+}
+
+function onInvestmentTargetChange() {
+  const symbol = document.getElementById("investment-target").value;
+  startAutoUpdate(symbol);
+}
+
+function startAutoUpdate(symbol) {
+  if (autoUpdateInterval) clearInterval(autoUpdateInterval);
+  loadInvestmentGraph(symbol);
+  autoUpdateInterval = setInterval(() => {
+    loadInvestmentGraph(symbol);
+  }, 5000);
+}
+
+async function loadInvestmentGraph(symbol) {
+  currentSymbol = symbol;
+  const ctx = document.getElementById("investmentChart").getContext("2d");
+
+  let labels = [];
+  let prices = [];
+
+  try {
+    if (cryptoMap[symbol]) {
+      const id = cryptoMap[symbol];
+      const url = `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=eur&days=30`;
+      const res = await fetch(url);
+      const data = await res.json();
+      labels = data.prices.map(p => {
+        const date = new Date(p[0]);
+        return date.toLocaleDateString("fi-FI", { day: "2-digit", month: "short" });
+      });
+      prices = data.prices.map(p => p[1]);
+    } else if (stockMap[symbol]) {
+      const ticker = stockMap[symbol];
+      const url = `https://corsproxy.io/?https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1mo&interval=1d`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const result = json.chart.result[0];
+      const timestamps = result.timestamp;
+      const closePrices = result.indicators.quote[0].close;
+
+      labels = timestamps.map(ts => {
+        const date = new Date(ts * 1000);
+        return date.toLocaleDateString("fi-FI", { day: "2-digit", month: "short" });
+      });
+      prices = closePrices;
+    }
+
+    if (investmentChart) investmentChart.destroy();
+    investmentChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: symbol,
+          data: prices,
+          borderColor: "blue",
+          backgroundColor: "rgba(0,0,255,0.1)",
+          fill: true
+        }]
+      }
+    });
+  } catch (err) {
+    console.error("Virhe ladattaessa dataa:", err);
+  }
 }
