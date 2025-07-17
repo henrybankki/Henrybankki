@@ -47,11 +47,12 @@
 
     <h3>Sijoitukset</h3>
     <select id="investment-target" onchange="onInvestmentTargetChange()"></select>
-    <div id="investment-graph"></div>
-    <input type="number" id="investment-amount" placeholder="Summa">
+    <div id="investment-graph">
+  <canvas id="investmentChart" width="400" height="200"></canvas>
+</div>
+<input type="number" id="investment-amount" placeholder="Summa">
     <button onclick="invest()">Sijoita</button>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
-
     <h3>Lainan pyyntö</h3>
     <input type="number" id="loan-amount" placeholder="Summa">
     <button onclick="requestLoan()">Pyydä laina</button>
