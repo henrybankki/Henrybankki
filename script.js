@@ -204,3 +204,48 @@ async function redeemInvestment() {
   alert(`Lunastettu ${redeemed} €`);
   loadBalance();
 }
+
+async function sendMoney() {
+  const senderId = localStorage.getItem("currentUserId");
+  const receiverId = document.getElementById("transfer-target").value.trim();
+  const amount = parseFloat(document.getElementById("transfer-amount").value);
+
+  if (!receiverId || isNaN(amount) || amount <= 0) {
+    alert("Anna oikeat tiedot");
+    return;
+  }
+
+  if (receiverId === senderId) {
+    alert("Et voi lähettää rahaa itsellesi");
+    return;
+  }
+
+  const senderRef = db.collection("users").doc(senderId);
+  const receiverRef = db.collection("users").doc(receiverId);
+
+  try {
+    await db.runTransaction(async (transaction) => {
+      const senderDoc = await transaction.get(senderRef);
+      const receiverDoc = await transaction.get(receiverRef);
+
+      if (!senderDoc.exists) throw "Lähettäjän tiliä ei löytynyt";
+      if (!receiverDoc.exists) throw "Vastaanottajan tiliä ei löytynyt";
+
+      const senderData = senderDoc.data();
+      const receiverData = receiverDoc.data();
+
+      if (senderData.balance < amount) throw "Ei tarpeeksi saldoa";
+
+      transaction.update(senderRef, { balance: senderData.balance - amount });
+      transaction.update(receiverRef, { balance: (receiverData.balance || 0) + amount });
+    });
+
+    alert(`Lähetetty ${amount} € käyttäjälle ${receiverId}`);
+    loadBalance();
+    document.getElementById("transfer-target").value = "";
+    document.getElementById("transfer-amount").value = "";
+  } catch (error) {
+    alert("Virhe: " + error);
+    console.error(error);
+  }
+}
