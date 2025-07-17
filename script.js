@@ -205,10 +205,16 @@ async function redeemInvestment() {
   loadBalance();
 }
 
-async function sendMoney() {
+vasync function sendMoney() {
   const senderId = localStorage.getItem("currentUserId");
-  const iban = document.getElementById("transfer-iban").value.trim();
+  const iban = document.getElementById("transfer-iban").value.trim().toUpperCase();
   const amount = parseFloat(document.getElementById("transfer-amount").value);
+
+  // IBAN-validointi
+  if (!/^FIH[A-Z0-9]{6,}$/i.test(iban)) {
+    alert("Virheellinen IBAN-muoto (esim. FI1435123456)");
+    return;
+  }
 
   if (!iban || isNaN(amount) || amount <= 0) {
     alert("Anna oikeat tiedot");
@@ -218,7 +224,7 @@ async function sendMoney() {
   const senderRef = db.collection("users").doc(senderId);
 
   try {
-    // Hae vastaanottajan käyttäjä tilinumeron perusteella
+    // Hae vastaanottajan käyttäjä IBANin perusteella
     const querySnapshot = await db.collection("users").where("accountNumber", "==", iban).get();
 
     if (querySnapshot.empty) {
@@ -230,7 +236,7 @@ async function sendMoney() {
     const receiverId = receiverDoc.id;
 
     if (receiverId === senderId) {
-      alert("Et voi lähettää rahaa itsellesi");
+      alert("Et voi lähettää rahaa omalle tilillesi");
       return;
     }
 
@@ -261,4 +267,3 @@ async function sendMoney() {
     console.error(error);
   }
 }
-
