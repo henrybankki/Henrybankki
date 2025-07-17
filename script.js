@@ -13,7 +13,7 @@ function login() {
       document.getElementById("main-section").style.display = "block";
       document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
       loadBalance();
-      loadInvestmentTargets(); // Käynnistää sijoituskohteet ja graafin
+      loadInvestmentTargets();
     } else {
       alert("Virheellinen käyttäjätunnus tai PIN");
     }
@@ -48,6 +48,59 @@ function loadBalance() {
     document.getElementById("balance-display").innerText = `Saldo: ${data.balance} €`;
     document.getElementById("account-number-display").innerText = `Tilinumero: ${data.accountNumber}`;
   });
+}
+
+// ==== Rahansiirto IBANilla ====
+async function sendMoney() {
+  const userId = localStorage.getItem("currentUserId");
+  const amount = parseFloat(document.getElementById("transfer-amount").value);
+  const iban = document.getElementById("transfer-iban").value.trim().toUpperCase();
+
+  if (!amount || amount <= 0) {
+    alert("Anna kelvollinen summa!");
+    return;
+  }
+
+  if (!iban.startsWith("FI") || iban.length < 12) {
+    alert("Anna kelvollinen IBAN!");
+    return;
+  }
+
+  try {
+    const senderDoc = await db.collection("users").doc(userId).get();
+    const senderData = senderDoc.data();
+
+    if (senderData.balance < amount) {
+      alert("Ei tarpeeksi rahaa!");
+      return;
+    }
+
+    // Etsi vastaanottaja IBANin perusteella
+    const querySnapshot = await db.collection("users").where("accountNumber", "==", iban).get();
+    if (querySnapshot.empty) {
+      alert("Vastaanottajaa ei löytynyt!");
+      return;
+    }
+
+    const receiverDoc = querySnapshot.docs[0];
+    const receiverId = receiverDoc.id;
+    const receiverData = receiverDoc.data();
+
+    // Päivitä saldot
+    await db.collection("users").doc(userId).update({
+      balance: senderData.balance - amount
+    });
+
+    await db.collection("users").doc(receiverId).update({
+      balance: receiverData.balance + amount
+    });
+
+    alert(`Siirto onnistui! Lähetit ${amount} € tilille ${iban}`);
+    loadBalance();
+  } catch (err) {
+    console.error("Virhe rahansiirrossa:", err);
+    alert("Virhe siirrossa");
+  }
 }
 
 // ==== Sijoitukset ====
