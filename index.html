@@ -95,22 +95,22 @@
   <!-- 🔐 Kirjautuminen -->
   <div id="auth-section">
     <input type="text" id="userId" placeholder="Käyttäjätunnus">
-    <input type="password" id="pin" placeholder="PIN">
-    <button onclick="login()">Kirjaudu</button>
+    <input type="password" id="pin" placeholder="PIN">     <br>
+    <button onclick="login()">Kirjaudu</button>  <br>
     <button onclick="signup()">Luo tili</button>
   </div>
 
   <!-- ✅ Pääosio -->
   <div id="main-section" style="display:none;">
-    <p id="welcome-text"></p>
-    <p id="balance-display"></p>
+    <p id="welcome-text"></p><br>
+    <p id="balance-display"></p><br>
     <p id="account-number-display"></p>
 
     <!-- ✅ Rahansiirrot -->
     <h3>Lähetä rahaa (IBAN)</h3>
     <input type="text" id="send-iban" placeholder="Vastaanottajan IBAN">
-    <input type="number" id="send-amount" placeholder="Summa (€)">
-    <button onclick="sendMoney()">Lähetä</button>
+    <input type="number" id="send-amount" placeholder="Summa (€)"> <br>
+    <button onclick="sendMoney()">Lähetä</button> <br>
 
     <!-- ✅ Siirtohistoria -->
     <div id="transfer-history">
@@ -128,12 +128,12 @@
 
       <h4>Luo lasku</h4>
       <input type="text" id="invoice-user-id" placeholder="Käyttäjätunnus">
-      <input type="number" id="invoice-amount" placeholder="Summa (€)">
+      <input type="number" id="invoice-amount" placeholder="Summa (€)"> <br>
       <button onclick="createInvoice()">Luo lasku</button>
 
       <h4>Lisää rahaa käyttäjälle</h4>
       <input type="text" id="target-user-id" placeholder="Käyttäjätunnus">
-      <input type="number" id="add-money-amount" placeholder="Summa (€)">
+      <input type="number" id="add-money-amount" placeholder="Summa (€)"> <br>
       <button onclick="addMoney()">Lisää rahaa</button>
 
       <h4>Hyväksy lainat</h4>
@@ -142,12 +142,12 @@
 
     <!-- ✅ Sijoitukset -->
     <h3>Sijoitukset</h3>
-    <select id="investment-target" onchange="onInvestmentTargetChange()"></select>
-    <div id="investment-graph" style="margin-top:10px;">
+    <select id="investment-target" onchange="onInvestmentTargetChange()"></select> <br>
+    <div id="investment-graph" style="margin-top:10px;"> <br>
       <canvas id="investmentChart" width="200" height="200"></canvas>
     </div>
-    <input type="number" id="investment-amount" placeholder="Summa (€)">
-    <button onclick="invest()">Sijoita</button>
+    <input type="number" id="investment-amount" placeholder="Summa (€)"> <br>
+    <button onclick="invest()">Sijoita</button> <br>
     <button onclick="redeemInvestment()">Lunasta sijoitus</button>
 
     <!-- ✅ Lainat -->
