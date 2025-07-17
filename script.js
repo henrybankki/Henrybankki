@@ -47,3 +47,40 @@ function loadBalance() {
     document.getElementById("account-number-display").innerText = `Tilinumero: ${data.accountNumber}`;
   });
 }
+
+let investmentChart;
+
+function loadInvestmentGraph() {
+  const ctx = document.getElementById('investmentChart').getContext('2d');
+
+  // Simuloidaan sijoitusten arvon kehitystä
+  const labels = ['Tammi', 'Helmi', 'Maalis', 'Huhti', 'Touko', 'Kesä'];
+  const data = [100, 110, 105, 120, 125, 140];
+
+  if (investmentChart) {
+    investmentChart.destroy(); // tuhoaa vanhan jos on
+  }
+
+  investmentChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Sijoituksen arvo (€)',
+        data: data,
+        borderColor: 'blue',
+        backgroundColor: 'rgba(0, 0, 255, 0.1)',
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: false
+        }
+      }
+    }
+  });
+}
+
