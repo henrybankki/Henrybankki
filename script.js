@@ -13,7 +13,7 @@ function login() {
       document.getElementById("main-section").style.display = "block";
       document.getElementById("welcome-text").innerText = `Tervetuloa ${userId}`;
       loadBalance();
-      loadInvestmentTargets(); // ✅ Käynnistää sijoituskohteiden latauksen
+      loadInvestmentTargets(); // Käynnistää sijoituskohteet ja graafin
     } else {
       alert("Virheellinen käyttäjätunnus tai PIN");
     }
@@ -24,6 +24,7 @@ function signup() {
   const userId = document.getElementById("userId").value;
   const pin = document.getElementById("pin").value;
   const accountNumber = "FI" + Math.floor(1000000000 + Math.random() * 9000000000);
+
   db.collection("users").doc(userId).set({
     pin,
     balance: 100,
