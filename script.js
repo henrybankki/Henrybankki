@@ -34,13 +34,29 @@ function login() {
       }
     })
     .catch(e => alert("Kirjautuminen epäonnistui: " + e.message));
+
+  function assignMissingAccountNumbers() {
+  db.collection("users").get().then(snapshot => {
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      if (!data.accountNumber) {
+        const accountNumber = generateAccountNumber();
+        db.collection("users").doc(doc.id).update({ accountNumber });
+        console.log("Lisätty tilinumero käyttäjälle", doc.id);
+      }
+    });
+  });
 }
 
-function signup() {
+
+  
+  function signup() {
   const id = document.getElementById("userId").value.trim();
   const pin = document.getElementById("pin").value;
-  
+
   if (!id || !pin) return alert("Täytä kaikki kentät.");
+
+  const accountNumber = generateAccountNumber();
 
   auth.createUserWithEmailAndPassword(`${id}@henrybankki.fi`, pin)
     .then(() =>
@@ -49,12 +65,19 @@ function signup() {
         loan: 0,
         loanRequested: false,
         investment: 0,
-        investmentValue: 0
+        investmentValue: 0,
+        accountNumber
       })
     )
-    .then(() => alert("Tili luotu!"))
+    .then(() => alert("Tili luotu! Tilinumero: " + accountNumber))
     .catch(e => alert("Tiliä ei voitu luoda: " + e.message));
 }
+
+function generateAccountNumber() {
+  const randomSix = Math.floor(100000 + Math.random() * 900000);
+  return `FIH1435${randomSix}`;
+}
+
 
 function loadUserData(id) {
   db.collection("users").doc(id).onSnapshot(doc => {
