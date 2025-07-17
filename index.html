@@ -30,6 +30,26 @@
     <input type="number" id="sendAmount" placeholder="Summa €" step="0.01" min="0.01">
     <button onclick="sendMoney()">Lähetä rahaa</button>
 
+
+    <!-- ... aiemman koodin jälkeen pääosiossa -->
+<h3>Sijoitukset</h3>
+
+<select id="investmentTarget">
+  <option value="bitcoin">Bitcoin</option>
+  <option value="ethereum">Ethereum</option>
+  <option value="dogecoin">Dogecoin</option>
+  <option value="nokia">Nokia</option>
+  <option value="tesla">Tesla</option>
+  <option value="metsarahasto">Metsärahasto</option>
+  <option value="aurinkosahko">Aurinkosähkö</option>
+  <option value="kulta">Kulta</option>
+  <option value="öljy">Öljy</option>
+  <option value="pörssirahasto">Pörssirahasto</option>
+</select>
+<input type="number" id="investmentAmount" placeholder="Sijoitettava summa €" step="0.01" min="0.01" />
+<button onclick="invest()">Sijoita</button>
+
+
     <h3>Laskut</h3>
     <ul id="invoice-list"></ul>
 
