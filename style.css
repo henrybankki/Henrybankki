@@ -1,0 +1,121 @@
+/* Henrybankki global styles - mobile first */
+:root{
+  --primary:#007bff;
+  --primary-hover:#0056b3;
+  --danger:#dc3545;
+  --success:#28a745;
+  --bg:#f9f9f9;
+  --card-bg:#fff;
+  --border:#ccc;
+  --radius:10px;
+  --space:20px;
+  --font-size:16px;
+}
+
+*{box-sizing:border-box;}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  margin:0;
+  padding:0;
+  background:var(--bg);
+  color:#333;
+  line-height:1.4;
+}
+
+h1,h2,h3,h4{
+  text-align:center;
+  margin-top:1rem;
+  margin-bottom:.5rem;
+}
+
+a{
+  color:var(--primary);
+  text-decoration:none;
+}
+a:hover{text-decoration:underline;}
+
+.container, #auth-section, #main-section, .card{
+  width:100%;
+  max-width:600px;
+  margin:var(--space) auto;
+  background:var(--card-bg);
+  padding:var(--space);
+  border-radius:var(--radius);
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+}
+
+input,select,button,textarea{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  border-radius:6px;
+  border:1px solid var(--border);
+  font-size:var(--font-size);
+}
+
+textarea{resize:vertical;min-height:80px;}
+
+button{
+  background:var(--primary);
+  color:#fff;
+  font-weight:bold;
+  border:none;
+  cursor:pointer;
+  transition:background .3s;
+}
+button:hover{background:var(--primary-hover);}
+
+button.danger{background:var(--danger);}
+button.success{background:var(--success);}
+
+.list{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+.list li{
+  background:#f4f4f4;
+  padding:8px 10px;
+  margin-bottom:6px;
+  border-radius:6px;
+  font-size:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.inline-links{
+  display:flex;
+  justify-content:center;
+  gap:1rem;
+  flex-wrap:wrap;
+  margin-top:1rem;
+}
+
+.accounts-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+.accounts-grid .acct{
+  background:#f4f4f4;
+  border-radius:6px;
+  padding:10px;
+  font-size:15px;
+}
+.accounts-grid .acct strong{display:block;}
+
+.summary-total{
+  font-size:1.2rem;
+  font-weight:bold;
+  text-align:center;
+  margin-top:1rem;
+}
+
+@media (min-width:600px){
+  .accounts-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
