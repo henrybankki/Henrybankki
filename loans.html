@@ -1,0 +1,33 @@
+<!-- loans.html -->
+<!DOCTYPE html>
+<html lang="fi" data-page="loans">
+<head>
+  <meta charset="UTF-8">
+  <title>Henrybankki – Lainat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <script src="firebase-config.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Lainat</h1>
+    <nav><button onclick="goPage('index.html')">← Etusivu</button></nav>
+  </header>
+
+  <section>
+    <h2>Pyydä lainaa</h2>
+    <input type="number" id="loan-amount" placeholder="Summa (€)">
+    <button onclick="requestLoan()">Pyydä laina</button>
+  </section>
+
+  <section>
+    <h2>Lainasi</h2>
+    <ul id="user-loans"></ul>
+  </section>
+</body>
+</html>
