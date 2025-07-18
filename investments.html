@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fi" data-page="investments">
+<head>
+  <meta charset="UTF-8">
+  <title>Sijoitukset - Henrybankki</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <!-- firebase-config.js (supply your own in project root) -->
+  <script src="../firebase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../js/app.js" defer></script>
+  <style>body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f9f9f9;color:#333}</style>
+</head>
+<body>
+  <h1>Sijoitukset</h1>
+  <div class="card">
+    <select id="investment-target"></select>
+    <div style="width:100%;height:300px;">
+      <canvas id="investmentChart"></canvas>
+    </div>
+    <input type="number" id="investment-amount" placeholder="Summa €">
+    <button id="invest-btn">Sijoita</button>
+    <button id="redeem-btn">Lunasta sijoitus</button>
+  </div>
+  <div class="inline-links">
+    <a href="dashboard.html">Takaisin</a>
+  </div>
+</body>
+</html>

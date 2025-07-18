@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fi" data-page="dashboard">
+<head>
+  <meta charset="UTF-8">
+  <title>Henrybankki - Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <!-- firebase-config.js (supply your own in project root) -->
+  <script src="../firebase-config.js"></script>
+  <script src="../js/app.js" defer></script>
+  <style>body{font-family:Arial,sans-serif;margin:0;padding:0;background:#f9f9f9;color:#333}</style>
+</head>
+<body>
+  <h1>Tilikoonti</h1>
+  <div id="main-section" class="card">
+    <h2>Tilit</h2>
+    <div id="accounts-summary" class="accounts-grid"></div>
+    <div class="summary-total" id="accounts-total"></div>
+
+    <h3>Pyydä uusi tili (admin hyväksyy)</h3>
+    <select id="new-account-type">
+      <option value="kayttotili">Käyttötili</option>
+      <option value="saastotili">Säästötili</option>
+      <option value="muu">Muu</option>
+    </select>
+    <button id="request-account-btn">Lähetä pyyntö</button>
+
+    <h3>Siirtohistoria</h3>
+    <ul id="transfer-list" class="list"></ul>
+
+    <div class="inline-links">
+      <a href="payments.html">Siirrot & Laskut</a>
+      <a href="investments.html">Sijoitukset</a>
+      <a href="loans.html">Lainat</a>
+      <span id="admin-link-wrapper" style="display:none;"><a href="admin.html">Admin-paneeli</a></span>
+    </div>
+
+    <button id="logout-btn">Kirjaudu ulos</button>
+  </div>
+</body>
+</html>
