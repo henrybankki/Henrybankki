@@ -540,33 +540,37 @@ async function loadUserLoans(){
 }
 
 // ---------- Investments ----------
-function loadInvestmentTargets() {
+function loadInvestmentTargets(){
+  const sel = document.getElementById('investment-target');
+  if (!sel) return;
+
   const targets = [
-    { id: "BTC", name: "Bitcoin" },
-    { id: "ETH", name: "Ethereum" },
-    { id: "BNB", name: "Binance Coin" },
-    { id: "SOL", name: "Solana" },
-    { id: "XRP", name: "Ripple" },
-    { id: "NOKIA", name: "Nokia Oyj" },
-    { id: "KONE", name: "KONE Oyj" },
-    { id: "FORTUM", name: "Fortum Oyj" },
-    { id: "SAMPO", name: "Sampo Oyj" },
-    { id: "NESTE", name: "Neste Oyj" }
+    { id:'BTC', name:'Bitcoin' },
+    { id:'ETH', name:'Ethereum' },
+    { id:'BNB', name:'Binance Coin' },
+    { id:'SOL', name:'Solana' },
+    { id:'XRP', name:'Ripple' },
+    { id:'NOKIA', name:'Nokia Oyj' },
+    { id:'KONE', name:'KONE Oyj' },
+    { id:'FORTUM', name:'Fortum Oyj' },
+    { id:'SAMPO', name:'Sampo Oyj' },
+    { id:'NESTE', name:'Neste Oyj' }
   ];
 
-  const sel = document.getElementById("investment-target");
-  sel.innerHTML = ""; // ✅ Tyhjennetään ennen kuin lisätään uusia!
-  
+  // Estä loputon kasautuminen
+  sel.innerHTML = '';
+
   targets.forEach(t => {
-    const opt = document.createElement("option");
+    const opt = document.createElement('option');
     opt.value = t.id;
     opt.textContent = t.name;
     sel.appendChild(opt);
   });
 
   // Käynnistä päivitys ensimmäiselle kohteelle
-  startAutoUpdate(targets[0].id);
+  startInvestAutoUpdate(targets[0].id);
 }
+
 
 
 function onInvestmentTargetChange(){
