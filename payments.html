@@ -1,0 +1,61 @@
+<!-- payments.html -->
+<!DOCTYPE html>
+<html lang="fi" data-page="payments">
+<head>
+  <meta charset="UTF-8">
+  <title>Henrybankki – Maksut</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-analytics.js"></script>
+  <script src="firebase-config.js"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Maksut</h1>
+    <nav><button onclick="goPage('index.html')">← Etusivu</button></nav>
+  </header>
+
+  <section id="account-info"></section>
+
+  <!-- Free transfer -->
+  <section>
+    <h2>Lähetä rahaa</h2>
+    <label>Velotettava tili</label>
+    <select id="pay-from-account"></select>
+    <label>Vastaanottajan IBAN</label>
+    <input type="text" id="send-iban" placeholder="FI...">
+    <label>Summa (€)</label>
+    <input type="number" id="send-amount" placeholder="0">
+    <label>Viesti (valinnainen)</label>
+    <input type="text" id="send-message" placeholder="Viesti vastaanottajalle">
+    <button onclick="sendMoney()">Lähetä</button>
+  </section>
+
+  <!-- Pay invoice -->
+  <section>
+    <h2>Maksa lasku viitenumerolla</h2>
+    <label>Velotettava tili</label>
+    <select id="invoice-pay-from-account"></select>
+    <label>Viitenumero</label>
+    <input type="text" id="pay-invoice-ref" placeholder="Viitenumero">
+    <button onclick="payInvoice()">Maksa lasku</button>
+  </section>
+
+  <!-- Transfer history -->
+  <section>
+    <h2>Siirtohistoria</h2>
+    <ul id="transfer-list"></ul>
+  </section>
+
+  <!-- Create new account -->
+  <section>
+    <h2>Luo uusi tili</h2>
+    <input type="text" id="new-account-name" placeholder="Tilin nimi (esim. Säästötili)">
+    <button onclick="createSubAccount()">Luo tili</button>
+  </section>
+</body>
+</html>
