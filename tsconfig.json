@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.node.json",
+  "include": ["src"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "isolatedModules": true,
+    "allowJs": false,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "types": ["node", "react", "react-dom"]
+  }
+}
