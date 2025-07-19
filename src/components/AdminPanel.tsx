@@ -1,0 +1,1 @@
+// Tässä tulee AdminPanel.tsx koodi (kuten aiemmin)

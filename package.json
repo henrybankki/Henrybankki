@@ -1,0 +1,27 @@
+{
+  "name": "henrybankki",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.23.1",
+    "axios": "^1.10.0",
+    "firebase": "^11.0.1",
+    "bcryptjs": "^2.4.3",
+    "chart.js": "^4.5.0",
+    "react-chartjs-2": "^5.3.0"
+  },
+  "devDependencies": {
+    "vite": "^5.1.0",
+    "tailwindcss": "^3.4.3",
+    "postcss": "^8.4.35",
+    "autoprefixer": "^10.4.17",
+    "typescript": "^5.4.2"
+  }
+}
